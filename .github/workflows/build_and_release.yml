@@ -22,13 +22,12 @@ jobs:
       - name: Checkout Lekpad repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java
+      # Step 2: Set up Java (Removed cache: 'gradle' to prevent error prior to scaffolding)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
 
       # Step 3: Set up Flutter
       - name: Set up Flutter

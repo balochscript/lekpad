@@ -1,0 +1,173 @@
+name: Lekpad CI/CD Build Workflow
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allows manual trigger from Actions tab
+
+jobs:
+  # 1. Job to Build Android App (APK & App Bundle)
+  build-android:
+    name: Build Android (APK & AAB)
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout our custom Lekpad repository
+      - name: Checkout Lekpad repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      # Step 3: Set up Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # Step 4: Scaffold the Flutter project dynamically
+      - name: Scaffold Flutter project
+        run: |
+          # Keep our custom files safe by moving them to a temp folder
+          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
+          mv lib/* temp_custom/lib/
+          mv android/* temp_custom/android/
+          mv ios/* temp_custom/ios/
+          mv scripts/* temp_custom/scripts/
+          mv images/* temp_custom/images/
+          mv pubspec.yaml temp_custom/
+          
+          # Scaffold the Flutter project in a subfolder
+          flutter create --org com.example lekpad_scaffold
+          
+          # Move scaffolded project up to root level
+          mv lekpad_scaffold/* .
+          mv lekpad_scaffold/.[!.]* . || true
+          rm -rf lekpad_scaffold
+          
+          # Restore our custom files back over the scaffolded template
+          cp -r temp_custom/lib/* lib/
+          cp -r temp_custom/scripts/* scripts/
+          cp -r temp_custom/images/* images/
+          cp temp_custom/pubspec.yaml .
+          
+          # Move Android custom Kotlin file and XML resources to the correct package path
+          mkdir -p android/app/src/main/kotlin/com/example/lekpad
+          cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/com/example/lekpad/
+          
+          mkdir -p android/app/src/main/res/xml
+          mkdir -p android/app/src/main/res/layout
+          cp temp_custom/android/app/src/main/res/xml/method.xml android/app/src/main/res/xml/
+          cp temp_custom/android/app/src/main/res/layout/keyboard_view.xml android/app/src/main/res/layout/
+          cp temp_custom/android/app/src/main/res/layout/popup_keyboard.xml android/app/src/main/res/layout/
+          
+          # Run python script to automatically inject service to AndroidManifest.xml
+          python scripts/inject_android.py
+          
+          # Clean up temp directory
+          rm -rf temp_custom
+
+      # Step 5: Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Step 6: Build release formats
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Build Release App Bundle (AAB)
+        run: flutter build appbundle --release
+
+      # Step 7: Upload build outputs as artifacts
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lekpad-android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lekpad-android-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+
+  # 2. Job to Build iOS App on macOS
+  build-ios:
+    name: Build iOS (Runner App Bundle)
+    runs-on: macos-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Lekpad repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # Step 3: Scaffold the Flutter project dynamically on macOS
+      - name: Scaffold Flutter project
+        run: |
+          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
+          mv lib/* temp_custom/lib/
+          mv android/* temp_custom/android/
+          mv ios/* temp_custom/ios/
+          mv scripts/* temp_custom/scripts/
+          mv images/* temp_custom/images/
+          mv pubspec.yaml temp_custom/
+          
+          flutter create --org com.example lekpad_scaffold
+          
+          mv lekpad_scaffold/* .
+          mv lekpad_scaffold/.[!.]* . || true
+          rm -rf lekpad_scaffold
+          
+          cp -r temp_custom/lib/* lib/
+          cp -r temp_custom/scripts/* scripts/
+          cp -r temp_custom/images/* images/
+          cp temp_custom/pubspec.yaml .
+          
+          # Put iOS custom Swift code in place
+          cp temp_custom/ios/KeyboardViewController.swift ios/
+          
+          # Install CocoaPods gem required for Xcode project manipulation
+          gem install xcodeproj
+          
+          # Programmatically configure iOS App Keyboard Extension target in Xcode
+          ruby scripts/setup_ios.rb
+          
+          rm -rf temp_custom
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          cd ios
+          pod install
+
+      # Step 5: Build iOS app bundle (unsigned for CI/CD)
+      - name: Build iOS (No Codesign)
+        run: flutter build ios --release --no-codesign
+
+      # Step 6: Upload iOS build directory
+      - name: Upload iOS App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lekpad-ios-app
+          path: build/ios/iphoneos/Runner.app

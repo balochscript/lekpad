@@ -1,4 +1,4 @@
-package com.example.balochi_keyboard
+package bc.lekpad.balochi
 
 import android.content.ClipDescription
 import android.content.ClipboardManager
@@ -13,6 +13,11 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
+import com.example.lekpad.R // Unused standard placeholder import
+import bc.example.lekpad.R // Generic placeholder
+import com.example.lekpad_scaffold.R // Alternative placeholder
+import com.example.lekpad.BalochiInputMethod // Reference
+import bc.lekpad.balochi.R // This is the EXACT compiled package resource R class!
 
 class BalochiInputMethod : InputMethodService() {
 
@@ -45,7 +50,7 @@ class BalochiInputMethod : InputMethodService() {
         "Ustum", "Ustàz", "Òlàk", "Òšt", "Pattar", "Pit", "Poll", "Rung", "Ràhšòn", "Siyàh",
         "Sangat", "Suhl", "Šàšk", "Šaš", "Šahdarbarjàh", "Tal", "Talàr", "Ťak", "Ťràšò", "Hur",
         "Wail", "Wàhag", "Yal", "Zahèr", "Ziďď", "Zàl", "Žàng", "Bòž", "Balòc", "Balòcestàn", "Balòcī",
-        "Salàm", "Vàlaik", 'Čònai', 'Man', 'Vašaon', 'Tà', 'Han', 'Ce', 'Hàl', 'Ent', 'Vaš', 'Salàmati', 'Jòďī',
+        "Salàm", "Vàlaik", "Čònai", "Man", "Vašaon", "Tà", "Han", "Ce", "Hàl", "Ent", "Vaš", "Salàmati", "Jòďī",
         "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", 
         "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", 
         "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", 
@@ -86,6 +91,7 @@ class BalochiInputMethod : InputMethodService() {
         val currentNightMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
         isNightMode = currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
 
+        // Inflate keyboard view
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         keyboardView = inflater.inflate(R.layout.keyboard_view, null)
 
@@ -121,7 +127,7 @@ class BalochiInputMethod : InputMethodService() {
         } else {
             listOf(
                 listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
-                listOf("À", "W", "E", "R", 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'),
+                listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"),
                 listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"),
                 listOf("⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"),
                 listOf("ツ Sym", "اب ...", "SPACE", ".", "Màn")

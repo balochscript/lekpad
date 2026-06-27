@@ -14,7 +14,8 @@ class MainActivity: FlutterActivity() {
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartInterface.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        // Fixed: Use dartExecutor instead of dartInterface for modern Flutter SDK compatibility!
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openKeyboardSettings" -> {
                     try {

@@ -70,7 +70,7 @@ class BalochiInputMethod : InputMethodService() {
         "گ" to listOf("غ"),
         "پ" to listOf("ف"),
         "ک" to listOf("ق"),
-        "ھ" to listOf("ہ", "هـ", "ح", "ه"), // Included Choti He 'ہ' under Do-Chashmi He 'ھ'
+        "ھ" to listOf("ہ", "هـ", "ح", "ه"), 
         "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
         "و" to listOf("ۏ", "ؤ", "وْ", "وُ"),
         "ۏ" to listOf("و", "ؤ", "وْ", "وُ"),
@@ -78,7 +78,7 @@ class BalochiInputMethod : InputMethodService() {
         "ن" to listOf("ں", "نٚ"),
         "ر" to listOf("ڑ"),
         "ژ" to listOf("ظ"),
-        "۔" to listOf("ـ", "—", "-"), // Tatweel/Kashida 'ـ' mapped under Balochi full-stop '۔'
+        "۔" to listOf("ـ", "—", "-"), 
         "a" to listOf("á", "à", "æ"),
         "d" to listOf("ď"),
         "g" to listOf("ĝ"),
@@ -110,9 +110,9 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        // Dynamic: Read customizable colors chosen by the user from Shared Preferences!
+        // Dynamic: Read customizable colors from Shared Preferences using getLong to prevent ClassCastException!
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        kbBgColor = prefs.getInt("flutter.kb_bg_color", if (isNightMode) 0xFF0F172A.toInt() else 0xFFE2E8F0.toInt())
+        kbBgColor = prefs.getLong("flutter.kb_bg_color", if (isNightMode) 0xFF0F172A else 0xFFE2E8F0).toInt()
         keyBgColor = prefs.getInt("flutter.key_bg_color", if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt())
         keyTextColor = prefs.getInt("flutter.key_text_color", if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt())
 
@@ -123,28 +123,32 @@ class BalochiInputMethod : InputMethodService() {
         val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container)
         layoutContainer.removeAllViews()
 
-        // Precise rows matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji button "؟۱۲۳", and "ھ" instead of "هـ")
+        // Precise rows matching IMG_20260626_214608.png with "ۏ" in row 1, non-emoji button "؟۱۲۳", and "ھ" instead of "هـ"
+        // Swapped text labels for standard, clean minimal symbols: ⌫ (Backspace), ⏎ (Enter)
         val rows = if (isBalorabi) {
             listOf(
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
                 listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
-                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"),
-                listOf("؟۱۲۳", "🌐", " ", "۔", "مان")
+                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"),
+                listOf("؟۱۲۳", "🌐", " ", "۔", "⏎")
             )
         } else {
             listOf(
                 listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
                 listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"),
                 listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"),
-                listOf("⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"),
-                listOf("?123", "🌐", " ", ".", "Màn")
+                listOf("⬆", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"),
+                listOf("?123", "🌐", " ", ".", "⏎")
             )
         }
 
         for (row in rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
+                // Force RTL direction for Balorabi (Arabic) so keys flow naturally from right to left!
+                layoutDirection = if (isBalorabi) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+                
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
@@ -153,7 +157,7 @@ class BalochiInputMethod : InputMethodService() {
 
             for (key in row) {
                 val keyButton = Button(this).apply {
-                    text = if (key == " ") "␣" else key // Minimal space bar representation
+                    text = if (key == " ") "␣" else key // Minimal space indicator
                     
                     // Set custom colors dynamically from user choices!
                     setBackgroundColor(keyBgColor)
@@ -186,11 +190,11 @@ class BalochiInputMethod : InputMethodService() {
                 ic.commitText(" ", 1)
                 updateWordPredictions("")
             }
-            "پاکے", "Pàk" -> {
+            "◀پاکے", "⌫" -> {
                 ic.deleteSurroundingText(1, 0)
                 updateWordPredictions("")
             }
-            "مان", "Màn" -> {
+            "مان", "⏎" -> {
                 ic.commitText("\n", 1)
                 updateWordPredictions("")
             }

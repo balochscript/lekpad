@@ -1,6 +1,6 @@
-name: lekpad
+name: Lekpad
 description: A standard Balochi keyboard named Lekpad with Balorabi and Balotin support.
-version: 1.0.0+1
+version: 1.0.0+8
 
 publish_to: 'none'
 
@@ -21,3 +21,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Asset declaration to load and display the Lekpad transparent app logo inside the Flutter app!
+  assets:
+    - images/icon.png

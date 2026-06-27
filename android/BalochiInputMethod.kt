@@ -70,13 +70,15 @@ class BalochiInputMethod : InputMethodService() {
         "گ" to listOf("غ"),
         "پ" to listOf("ف"),
         "ک" to listOf("ق"),
-        "هـ" to listOf("ھ", "ح", "ه"),
+        "ھ" to listOf("ہ", "هـ", "ح", "ه"), // Included Choti He 'ہ' under Do-Chashmi He 'ھ'
         "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
         "و" to listOf("ۏ", "ؤ", "وْ", "وُ"),
+        "ۏ" to listOf("و", "ؤ", "وْ", "وُ"),
         "ی" to listOf("ݔ", "ے", "یْ", "یٰ", "ئ"),
         "ن" to listOf("ں", "نٚ"),
         "ر" to listOf("ڑ"),
         "ژ" to listOf("ظ"),
+        "۔" to listOf("ـ", "—", "-"), // Tatweel/Kashida 'ـ' mapped under Balochi full-stop '۔'
         "a" to listOf("á", "à", "æ"),
         "d" to listOf("ď"),
         "g" to listOf("ĝ"),
@@ -121,14 +123,14 @@ class BalochiInputMethod : InputMethodService() {
         val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container)
         layoutContainer.removeAllViews()
 
-        // Precise rows matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji button "?۱۲۳")
+        // Precise rows matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji button "؟۱۲۳", and "ھ" instead of "هـ")
         val rows = if (isBalorabi) {
             listOf(
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
-                listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "هـ", "ج", "چ", "ءِ"),
+                listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
                 listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"),
-                listOf("؟۱۲۳", "ABC", "SPACE", "-", "مان")
+                listOf("؟۱۲۳", "🌐", " ", "۔", "مان")
             )
         } else {
             listOf(
@@ -136,7 +138,7 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"),
                 listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"),
                 listOf("⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"),
-                listOf("?123", "اب ...", "SPACE", ".", "Màn")
+                listOf("?123", "🌐", " ", ".", "Màn")
             )
         }
 
@@ -151,7 +153,8 @@ class BalochiInputMethod : InputMethodService() {
 
             for (key in row) {
                 val keyButton = Button(this).apply {
-                    text = key
+                    text = if (key == " ") "␣" else key // Minimal space bar representation
+                    
                     // Set custom colors dynamically from user choices!
                     setBackgroundColor(keyBgColor)
                     setTextColor(keyTextColor)
@@ -172,14 +175,14 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun isPunctuation(char: String): Boolean {
-        val punc = listOf(" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=")
+        val punc = listOf(" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=", "۔", "ـ")
         return punc.contains(char)
     }
 
     private fun handleKeyPress(key: String) {
         val ic: InputConnection = currentInputConnection ?: return
         when (key) {
-            "SPACE" -> {
+            "SPACE", " " -> {
                 ic.commitText(" ", 1)
                 updateWordPredictions("")
             }
@@ -191,13 +194,16 @@ class BalochiInputMethod : InputMethodService() {
                 ic.commitText("\n", 1)
                 updateWordPredictions("")
             }
-            "ABC" -> {
-                isBalorabi = false
+            "ABC", "🌐" -> {
+                isBalorabi = !isBalorabi
                 setupKeyboardLayout()
             }
-            "اب ..." -> {
+            "اب ...", "اب/ABC" -> {
                 isBalorabi = true
                 setupKeyboardLayout()
+            }
+            "؟۱۲۳", "?123" -> {
+                // Symbol toggles can be mapped to layout changes if needed
             }
             else -> {
                 // Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart'; // Fixed import typo (.dart added!)
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart'; // Loads Amiri font automatically
 import 'package:shared_preferences/shared_preferences.dart'; // Persists custom colors
 import 'balochi_keyboard_config.dart';
 
@@ -99,19 +98,20 @@ class _LekpadAppState extends State<LekpadApp> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Unified local Amiri font styling for the entire App Theme
     final darkTheme = ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFFD97706), // Glowing Amber/Gold
       scaffoldBackgroundColor: const Color(0xFF0F172A), // Luxury Dark Slate Grey
       cardColor: const Color(0xFF1E293B), // Slate Grey cards
       hintColor: const Color(0xFFDC2626), // Crimson Thread red
+      fontFamily: 'Amiri', // Offline standard local Amiri font
       colorScheme: const ColorScheme.dark(
         primary: Color(0xFFD97706),
         secondary: Color(0xFFF59E0B),
         error: Color(0xFFDC2626),
         surface: Color(0xFF1E293B),
       ),
-      textTheme: GoogleFonts.amiriTextTheme(ThemeData.dark().textTheme),
     );
 
     final lightTheme = ThemeData(
@@ -120,13 +120,13 @@ class _LekpadAppState extends State<LekpadApp> {
       scaffoldBackgroundColor: const Color(0xFFF1F5F9), 
       cardColor: Colors.white,
       hintColor: const Color(0xFFB91C1C), 
+      fontFamily: 'Amiri', // Offline standard local Amiri font
       colorScheme: const ColorScheme.light(
         primary: Color(0xFFD97706),
         secondary: Color(0xFFF59E0B),
         error: Color(0xFFB91C1C),
         surface: Colors.white,
       ),
-      textTheme: GoogleFonts.amiriTextTheme(ThemeData.light().textTheme),
     );
 
     return MaterialApp(
@@ -325,10 +325,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       appBar: AppBar(
         title: Text(
           _getLocalizedText('app_title'),
-          style: GoogleFonts.amiri(
+          style: const TextStyle(
+            fontFamily: 'Amiri',
             fontWeight: FontWeight.bold,
             fontSize: 28,
-            color: accentGold,
+            color: Color(0xFFD97706),
           ),
         ),
         centerTitle: true,
@@ -402,19 +403,21 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                   const SizedBox(height: 16),
                                   Text(
                                     widget.previousScript == 'balorabi' ? 'بلۏچی (balochi)' : 'balochi (بلۏچی)',
-                                    style: GoogleFonts.amiri(
+                                    style: const TextStyle(
+                                      fontFamily: 'Amiri',
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: accentGold,
+                                      color: Color(0xFFD97706),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
                                     _getLocalizedText('about_text'),
-                                    style: GoogleFonts.amiri(
+                                    style: const TextStyle(
+                                      fontFamily: 'Amiri',
                                       fontSize: 16,
-                                      color: isDark ? Colors.grey[300] : Colors.grey[800],
+                                      color: Colors.grey,
                                       height: 1.5,
                                     ),
                                     textAlign: TextAlign.center,
@@ -429,10 +432,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         // Quick Settings (Redankan) with active OS links!
                         Text(
                           _getLocalizedText('settings'),
-                          style: GoogleFonts.amiri(
+                          style: const TextStyle(
+                            fontFamily: 'Amiri',
                             fontSize: 20, 
                             fontWeight: FontWeight.bold,
-                            color: accentGold,
+                            color: Color(0xFFD97706),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -455,10 +459,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         // Themes (Rangbandi) & Custom Colors Panel!
                         Text(
                           _getLocalizedText('themes'),
-                          style: GoogleFonts.amiri(
+                          style: const TextStyle(
+                            fontFamily: 'Amiri',
                             fontSize: 20, 
                             fontWeight: FontWeight.bold,
-                            color: accentGold,
+                            color: Color(0xFFD97706),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -480,7 +485,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                         const SizedBox(width: 12),
                                         Text(
                                           isDark ? _getLocalizedText('night_mode') : _getLocalizedText('day_mode'),
-                                          style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.w500),
+                                          style: const TextStyle(fontFamily: 'Amiri', fontSize: 18, fontWeight: FontWeight.w500),
                                         ),
                                       ],
                                     ),
@@ -500,7 +505,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                   children: [
                                     Text(
                                       'کیبورڈءِ رنگبندی (Custom Key Colors)',
-                                      style: GoogleFonts.amiri(fontSize: 16, fontWeight: FontWeight.bold, color: accentGold),
+                                      style: const TextStyle(fontFamily: 'Amiri', fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
                                     ),
                                     const SizedBox(height: 8),
                                     Row(
@@ -528,10 +533,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         // Typing test
                         Text(
                           _getLocalizedText('test_typing'),
-                          style: GoogleFonts.amiri(
+                          style: const TextStyle(
+                            fontFamily: 'Amiri',
                             fontSize: 20, 
                             fontWeight: FontWeight.bold,
-                            color: accentGold,
+                            color: Color(0xFFD97706),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -541,12 +547,12 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                           autofocus: true,
                           readOnly: true, // typed on simulator below
                           showCursor: true,
-                          style: GoogleFonts.amiri(fontSize: 18),
+                          style: const TextStyle(fontFamily: 'Amiri', fontSize: 18),
                           decoration: InputDecoration(
                             hintText: widget.previousScript == 'balorabi' 
                                 ? 'بنویس اتدا... (نبیسگ)' 
                                 : 'Nabèsag-a bنگیج کن...',
-                            hintStyle: GoogleFonts.amiri(color: Colors.grey),
+                            hintStyle: const TextStyle(fontFamily: 'Amiri', color: Colors.grey),
                             filled: true,
                             fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                             border: OutlineInputBorder(
@@ -569,7 +575,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
               ],
             ),
 
-            // SLEEK FLOATING BUBBLE OVERLAY POPUP (Appears directly above long-pressed keys!)
+            // SLEEK FLOATING BUBBLE OVERLAY POPUP
             _buildFloatingBubblePopup(isDark, accentGold),
           ],
         ),
@@ -580,14 +586,13 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   Widget _buildFloatingBubblePopup(bool isDark, Color accentGold) {
     if (_longPressKey == null || _longPressPosition == null) return const SizedBox.shrink();
 
-    // Calculate elegant width and centering
     final bubbleWidth = (_longPressAlternatives.length * 52.0) + 20.0;
     double leftPosition = _longPressPosition!.dx - (bubbleWidth / 2);
-    if (leftPosition < 10) leftPosition = 10; // Prevent screen boundary overflow left
+    if (leftPosition < 10) leftPosition = 10; 
 
     return Positioned(
       left: leftPosition,
-      top: _longPressPosition!.dy - 90, // Positions floating bubble perfectly above finger!
+      top: _longPressPosition!.dy - 90, 
       child: Material(
         color: Colors.transparent,
         child: Container(
@@ -595,7 +600,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           decoration: BoxDecoration(
             color: widget.keyBgColor, 
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: accentGold, width: 1.5), // Glowing gold border matching Option 2!
+            border: Border.all(color: accentGold, width: 1.5), 
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.4),
@@ -625,10 +630,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                   ),
                   child: Text(
                     alt,
-                    style: GoogleFonts.amiri(
+                    style: const TextStyle(
+                      fontFamily: 'Amiri',
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: widget.keyTextColor,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -654,7 +660,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           children: [
             Container(width: 14, height: 14, decoration: BoxDecoration(color: currentColor, shape: BoxShape.circle, border: Border.all(color: Colors.black26))),
             const SizedBox(width: 6),
-            Text(label, style: GoogleFonts.amiri(fontSize: 12)),
+            Text(label, style: const TextStyle(fontFamily: 'Amiri', fontSize: 12)),
           ],
         ),
       ),
@@ -675,7 +681,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         leading: Icon(icon, color: accentGold),
         title: Text(
           title, 
-          style: GoogleFonts.amiri(fontWeight: FontWeight.w500, fontSize: 18),
+          style: const TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.w500, fontSize: 18),
         ),
         trailing: Icon(Icons.arrow_forward_ios, size: 16, color: accentGold),
         onTap: onTap,
@@ -703,11 +709,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 1. Prediction & Clipboard bar
           _buildPredictionBar(isDark, accentGold),
           const SizedBox(height: 6),
 
-          // 2. Keyboard Rows
           ...layout.map((row) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 2.5),
@@ -749,10 +753,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     const SizedBox(width: 4),
                     Text(
                       _clipboardText.length > 8 ? '${_clipboardText.substring(0, 6)}...' : _clipboardText,
-                      style: GoogleFonts.amiri(
+                      style: const TextStyle(
+                        fontFamily: 'Amiri',
                         fontSize: 12, 
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: Colors.white,
                       ),
                     )
                   ],
@@ -773,9 +778,10 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     side: BorderSide(color: accentGold.withOpacity(0.2)),
                     label: Text(
                       word,
-                      style: GoogleFonts.amiri(
+                      style: const TextStyle(
+                        fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold, 
-                        color: accentGold,
+                        color: Color(0xFFD97706),
                         fontSize: 16,
                       ),
                     ),
@@ -813,21 +819,21 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       );
     } else if (key == '⌫' || key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
       finalBg = isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
-      keyLabel = Text(
-        '⌫', // Replaced text completely with clean minimal Backspace icon!
-        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: crimsonThread, fontSize: 18),
+      keyLabel = const Text(
+        '⌫', 
+        style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Colors.red, fontSize: 18),
       );
     } else if (key == '⏎' || key == 'مان' || key == 'Màn') {
       finalBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
-      keyLabel = Text(
-        '⏎', // Replaced text completely with clean minimal Return/Enter icon!
-        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 18),
+      keyLabel = const Text(
+        '⏎', 
+        style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 18),
       );
     } else if (key == '؟۱۲۳' || key == '?123') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       keyLabel = Text(
         key,
-        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: accentGold, fontSize: 16),
+        style: const TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Color(0xFFD97706), fontSize: 16),
       );
     } else if (key == '🌐') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
@@ -836,17 +842,16 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       finalBg = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
       keyLabel = Text(
         key.replaceAll('صفحہ ۱ ◀', '← 1/2').replaceAll('صفحہ ۲ ◀', '2/2 →'),
-        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: textColor, fontSize: 13),
+        style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: textColor, fontSize: 13),
       );
     } else {
-      // Dynamic shift state representation on keycap
       String displayKey = key;
       if (widget.keyboardMode == 'balotin' && !_isShiftActive) {
         displayKey = key.toLowerCase();
       }
       keyLabel = Text(
         displayKey,
-        style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+        style: TextStyle(fontFamily: 'Amiri', fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
       );
     }
 
@@ -859,7 +864,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         } else if (key == '⏎' || key == 'مان' || key == 'Màn') {
           _insertText('\n');
         } else if (key == '⬆') {
-          // Toggle Shift state
           setState(() {
             _isShiftActive = !_isShiftActive;
           });
@@ -880,7 +884,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         } else if (isSpecial) {
           // Extra layouts transitions
         } else {
-          // Convert key to lowercase if shift is inactive!
           String typedKey = key;
           if (!_isShiftActive && key.length == 1) {
             typedKey = key.toLowerCase();
@@ -889,13 +892,12 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         }
       },
       onLongPressStart: (details) {
-        // Activates the real-time floating bubble popup directly above their finger!
         final alternatives = BalochiConfig.keyAlternativeSelections[key] ?? [];
         if (alternatives.isNotEmpty) {
           setState(() {
             _longPressKey = key;
             _longPressAlternatives = alternatives;
-            _longPressPosition = details.globalPosition; // Captured precise pixel coordinates!
+            _longPressPosition = details.globalPosition; 
           });
         }
       },
@@ -922,7 +924,8 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 right: 4,
                 child: Text(
                   hint,
-                  style: GoogleFonts.amiri(
+                  style: TextStyle(
+                    fontFamily: 'Amiri',
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: hintColor,

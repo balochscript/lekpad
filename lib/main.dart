@@ -1,4 +1,4 @@
-import 'package:flutter/material';
+import 'package:flutter/material.dart'; // Fixed import typo (.dart added!)
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart'; // Loads Amiri font automatically
 import 'balochi_keyboard_config.dart';

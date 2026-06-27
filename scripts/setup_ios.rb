@@ -16,7 +16,7 @@ extension_name = 'LekpadExtension'
 extension_dir = "ios/#{extension_name}"
 FileUtils.mkdir_p(extension_dir)
 
-# 3. Create Info.plist for the extension
+# 3. Create Info.plist for the extension (Including UIAppFonts for local Amiri font loading!)
 info_plist_content = <<~PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -40,6 +40,11 @@ info_plist_content = <<~PLIST
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>assets/fonts/Amiri-Regular.ttf</string>
+		<string>assets/fonts/Amiri-Bold.ttf</string>
+	</array>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
@@ -78,8 +83,8 @@ extension_target.product_type = 'com.apple.product-type.app-extension'
 group = main_group.find_subpath(extension_name, true)
 group.path = extension_name # CRUCIAL: Map the Xcode group to its physical folder on disk (relative to project root 'ios/')
 
-swift_file_ref = group.new_file("KeyboardViewController.swift") # File path inside the group folder
-plist_file_ref = group.new_file("Info.plist") # File path inside the group folder
+swift_file_ref = group.new_file("KeyboardViewController.swift") 
+plist_file_ref = group.new_file("Info.plist") 
 
 # 7. Add Swift file to compilation sources
 extension_target.add_file_references([swift_file_ref])

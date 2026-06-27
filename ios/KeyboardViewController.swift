@@ -14,7 +14,7 @@ class KeyboardViewController: UIInputViewController {
     private var isShiftActive: Bool = false
 
     // Comprehensive standard dictionary strictly filtered (no ظطضصثقفغعخ)
-    private val balorabiVocab = [
+    private let balorabiVocab = [ // Fixed: 'val' changed to 'let' in Swift!
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
         "ڈُنگ", "ڈَل", "اِشک", "اݔدام", "بݔر", "اِسبݔت", "گَنش", "گُب", "گوارَگ", "ھئیک",
         "ھال", "ھَشت", "کِرر", "کَپپَگی", "لَھم", "لَشکَر", "مادَگ", "مار", "نَمیبگ", "نِھݔپَگ",
@@ -29,7 +29,7 @@ class KeyboardViewController: UIInputViewController {
         "شَرر", "شؤک", "زَبَردَست"
     ]
 
-    private val balotinVocab = [
+    private let balotinVocab = [ // Fixed: 'val' changed to 'let' in Swift!
         "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj",
         "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik",
         "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag",
@@ -44,7 +44,7 @@ class KeyboardViewController: UIInputViewController {
     ]
 
     // Long press alternative letters mappings
-    private val longPressMappings: [String: [String]] = [
+    private let longPressMappings: [String: [String]] = [ // Fixed: 'val' changed to 'let' in Swift!
         "ت": ["ث", "ط"],
         "ج": ["ح"],
         "چ": ["خ"],
@@ -66,13 +66,13 @@ class KeyboardViewController: UIInputViewController {
         "۔": ["ـ", "—", "-"], 
         "a": ["á", "à", "æ"],
         "d": ["ď"],
-        "g" to ["ĝ"],
-        "i" to ["í", "ì"],
-        "r" to ["ř"],
-        "s" to ["š"],
-        "t" to ["ť"],
-        "u" to ["ú", "ù"],
-        "z" to ["ž"]
+        "g": ["ĝ"],
+        "i": ["í", "ì"],
+        "r": ["ř"],
+        "s": ["š"],
+        "t": ["ť"],
+        "u": ["ú", "ù"],
+        "z": ["ž"]
     ]
 
     override func viewDidLoad() {
@@ -151,6 +151,7 @@ class KeyboardViewController: UIInputViewController {
             view.removeFromSuperview()
         }
 
+        // Exact layout matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji "؟۱۲۳", and "ھ" instead of "هـ")
         let keys: [[String]] = isBalorabi ? [
             ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
             ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
@@ -165,6 +166,7 @@ class KeyboardViewController: UIInputViewController {
             ["?123", "🌐", " ", ".", "Màn"]
         ]
 
+        // Fetch custom colors from UserDefaults
         var customKeyBg = UIColor.systemBackground
         var customTextColor = UIColor.label
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
@@ -182,6 +184,7 @@ class KeyboardViewController: UIInputViewController {
             rowStack.distribution = .fillEqually
             rowStack.spacing = 5
             
+            // Force Right-to-Left alignment dynamically for Arabic-Balorabi script layout!
             if isBalorabi {
                 rowStack.semanticContentAttribute = .forceRightToLeft
             } else {
@@ -191,14 +194,13 @@ class KeyboardViewController: UIInputViewController {
             for key in row {
                 let button = UIButton(type: .system)
                 
+                // Capitalization/Shift rendering logic for letters
                 var keyTitle = key
                 if !isBalorabi && !isShiftActive && key.count == 1 {
                     keyTitle = key.lowercased()
                 }
                 
                 button.setTitle(keyTitle == " " ? "␣" : keyTitle, for: .normal) 
-                
-                // 1. HIGH-AESTHETIC SYNC: Custom identical corner radius, borders and fonts!
                 button.backgroundColor = customKeyBg
                 button.layer.cornerRadius = 8 // Matches premium rounded look!
                 button.layer.masksToBounds = true
@@ -253,11 +255,13 @@ class KeyboardViewController: UIInputViewController {
         case "؟۱۲۳", "?123":
             break
         default:
+            // Dynamic Shift Conversion before inserting
             var typedKey = key
             if !isBalorabi && !isShiftActive && key.count == 1 {
                 typedKey = key.lowercased()
             }
             
+            // Dynamic Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
             if let preceding = proxy.documentContextBeforeInput?.last, String(preceding) == "ے", !typedKey.isEmpty, !isPunctuation(typedKey) {
                 proxy.deleteBackward()
                 proxy.insertText("ݔ")
@@ -369,4 +373,3 @@ extension UIColor {
         )
     }
 }
-export template KeyboardViewController;

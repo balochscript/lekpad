@@ -55,9 +55,19 @@ class _LekpadAppState extends State<LekpadApp> {
         _keyTextColor = Colors.black87;
       }
     });
+    
+    // Save as integer for Android AND hex string for iOS compatibility
     await prefs.setInt('kb_bg_color', _kbBgColor.value);
     await prefs.setInt('key_bg_color', _keyBgColor.value);
     await prefs.setInt('key_text_color', _keyTextColor.value);
+    
+    await prefs.setString('kb_bg_color_hex', _colorToHex(_kbBgColor));
+    await prefs.setString('key_bg_color_hex', _colorToHex(_keyBgColor));
+    await prefs.setString('key_text_color_hex', _colorToHex(_keyTextColor));
+  }
+
+  String _colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).padLeft(8, '0')}';
   }
 
   void _setKeyboardMode(String mode) {
@@ -76,9 +86,15 @@ class _LekpadAppState extends State<LekpadApp> {
       _keyBgColor = key;
       _keyTextColor = text;
     });
+    
+    // Save to SharedPreferences so native Android (Long format) and iOS (Hex string) can safely load them
     await prefs.setInt('kb_bg_color', bg.value);
     await prefs.setInt('key_bg_color', key.value);
     await prefs.setInt('key_text_color', text.value);
+    
+    await prefs.setString('kb_bg_color_hex', _colorToHex(bg));
+    await prefs.setString('key_bg_color_hex', _colorToHex(key));
+    await prefs.setString('key_text_color_hex', _colorToHex(text));
   }
 
   @override
@@ -166,6 +182,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   List<String> _suggestions = [];
   String _clipboardText = '';
   static const MethodChannel _settingsChannel = MethodChannel('bc.lekpad.balochi/settings');
+  
+  // Shift state for Balotin layout
+  bool _isShiftActive = false;
 
   @override
   void initState() {
@@ -220,7 +239,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   bool _isPunctuation(String char) {
-    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '=', '۔', 'ـ'];
+    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '='];
     return punc.contains(char);
   }
 
@@ -232,6 +251,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     String finalChars = chars;
     String modifiedText = text;
     int cursorOffset = selection.start;
+
+    // Apply Shift logic for typing in Balotin layout
+    if (widget.keyboardMode == 'balotin' && !_isShiftActive) {
+      finalChars = chars.toLowerCase();
+    }
 
     if (selection.start > 0 && text[selection.start - 1] == 'ے' && chars.isNotEmpty && !_isPunctuation(chars)) {
       modifiedText = text.replaceRange(selection.start - 1, selection.start, 'ݔ');
@@ -327,7 +351,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Unified Luxury App Header
+                    // Unified App Header
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -410,14 +434,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                       icon: Icons.keyboard_capslock,
                       title: _getLocalizedText('enable_keyboard'),
                       accentGold: accentGold,
-                      onTap: _enableKeyboard, // Actively opens OS settings
+                      onTap: _enableKeyboard, 
                     ),
                     _buildSettingButton(
                       context,
                       icon: Icons.touch_app_outlined,
                       title: _getLocalizedText('choose_keyboard'),
                       accentGold: accentGold,
-                      onTap: _chooseKeyboard, // Actively triggers OS input picker
+                      onTap: _chooseKeyboard, 
                     ),
                     
                     const SizedBox(height: 16),
@@ -746,8 +770,13 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: textColor, fontSize: 13),
       );
     } else {
+      // Dynamic shift state representation on keycap
+      String displayKey = key;
+      if (widget.keyboardMode == 'balotin' && !_isShiftActive) {
+        displayKey = key.toLowerCase();
+      }
       keyLabel = Text(
-        key,
+        displayKey,
         style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
       );
     }
@@ -760,6 +789,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           _backspace();
         } else if (key == 'مان' || key == 'Màn') {
           _insertText('\n');
+        } else if (key == '⬆') {
+          // Toggle Shift state
+          setState(() {
+            _isShiftActive = !_isShiftActive;
+          });
         } else if (key == 'ABC') {
           widget.onModeChanged('balotin');
         } else if (key == 'اب ...') {
@@ -777,7 +811,12 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         } else if (isSpecial) {
           // Extra layouts transitions
         } else {
-          _insertText(key);
+          // Convert key to lowercase if shift is inactive!
+          String typedKey = key;
+          if (!_isShiftActive && key.length == 1) {
+            typedKey = key.toLowerCase();
+          }
+          _insertText(typedKey);
         }
       },
       onLongPress: () {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // Fixed import typo (.dart added!)
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart'; // Loads Amiri font automatically
 import 'package:shared_preferences/shared_preferences.dart'; // Persists custom colors
 import 'balochi_keyboard_config.dart';
 
@@ -98,7 +99,6 @@ class _LekpadAppState extends State<LekpadApp> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Unified local Amiri font styling for the entire App Theme
     final darkTheme = ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFFD97706), // Glowing Amber/Gold
@@ -703,28 +703,36 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       layout = BalochiConfig.symbolsLayout2;
     }
 
-    return Container(
-      color: keyboardBg,
-      padding: const EdgeInsets.only(top: 8, bottom: 16, left: 4, right: 4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildPredictionBar(isDark, accentGold),
-          const SizedBox(height: 6),
+    // Dynamically set directionality ONLY for the keyboard rows!
+    final kbDirection = (widget.keyboardMode == 'balorabi' || widget.keyboardMode == 'symbols2')
+        ? TextDirection.rtl
+        : TextDirection.ltr;
 
-          ...layout.map((row) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.5),
-              child: Row(
-                children: row.map((key) {
-                  return Expanded(
-                    child: _buildKeyWidget(key, isDark, accentGold, crimsonThread),
-                  );
-                }).toList(),
-              ),
-            );
-          }),
-        ],
+    return Directionality(
+      textDirection: kbDirection, // FIXED: Forces correct layout alignment regardless of app's global language!
+      child: Container(
+        color: keyboardBg,
+        padding: const EdgeInsets.only(top: 8, bottom: 16, left: 4, right: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildPredictionBar(isDark, accentGold),
+            const SizedBox(height: 6),
+
+            ...layout.map((row) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.5),
+                child: Row(
+                  children: row.map((key) {
+                    return Expanded(
+                      child: _buildKeyWidget(key, isDark, accentGold, crimsonThread),
+                    );
+                  }).toList(),
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

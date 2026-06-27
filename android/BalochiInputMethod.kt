@@ -3,6 +3,8 @@ package bc.lekpad.balochi
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -22,11 +24,13 @@ class BalochiInputMethod : InputMethodService() {
     private lateinit var clipboardBar: LinearLayout
     private var isNightMode: Boolean = false
     private var isBalorabi: Boolean = true
+    private var isShiftActive: Boolean = false // Track Shift state for Balotin layout
 
     // Dynamic customization color states
     private var kbBgColor: Int = 0xFF0F172A.toInt()
     private var keyBgColor: Int = 0xFF1E293B.toInt()
     private var keyTextColor: Int = 0xFFFFFFFF.toInt()
+    private var amiriTypeface: Typeface? = null
 
     // Comprehensive dictionary strictly filtered (no ظطضصثقفغعخ)
     private val balorabiVocab = listOf(
@@ -101,6 +105,13 @@ class BalochiInputMethod : InputMethodService() {
         suggestionBar = keyboardView.findViewById(R.id.suggestion_bar)
         clipboardBar = keyboardView.findViewById(R.id.clipboard_bar)
 
+        // Try loading the offline Amiri font compiled by Flutter dynamically!
+        try {
+            amiriTypeface = Typeface.createFromAsset(assets, "flutter_assets/assets/fonts/Amiri-Regular.ttf")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         applyTheme()
         setupKeyboardLayout()
         updateClipboardSuggestions()
@@ -110,7 +121,6 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        // Dynamic: Read customizable colors from Shared Preferences using getLong to prevent ClassCastException!
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         kbBgColor = prefs.getLong("flutter.kb_bg_color", if (isNightMode) 0xFF0F172A else 0xFFE2E8F0).toInt()
         keyBgColor = prefs.getInt("flutter.key_bg_color", if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt())
@@ -123,7 +133,7 @@ class BalochiInputMethod : InputMethodService() {
         val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container)
         layoutContainer.removeAllViews()
 
-        // Precise rows matching IMG_20260626_214608.png with "ۏ" in row 1, non-emoji button "؟۱۲۳", and "ھ" instead of "هـ"
+        // Precise rows matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji button "؟۱۲۳", and "ھ" instead of "هـ")
         // Swapped text labels for standard, clean minimal symbols: ⌫ (Backspace), ⏎ (Enter)
         val rows = if (isBalorabi) {
             listOf(
@@ -131,7 +141,7 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
                 listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"),
-                listOf("؟۱۲۳", "🌐", " ", "۔", "⏎")
+                listOf("؟۱۲۳", "🌐", " ", "۔", "مان") // Using 'مان' on android label fallback
             )
         } else {
             listOf(
@@ -139,14 +149,13 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"),
                 listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"),
                 listOf("⬆", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"),
-                listOf("?123", "🌐", " ", ".", "⏎")
+                listOf("?123", "🌐", " ", ".", "Màn")
             )
         }
 
         for (row in rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                // Force RTL direction for Balorabi (Arabic) so keys flow naturally from right to left!
                 layoutDirection = if (isBalorabi) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
                 
                 layoutParams = LinearLayout.LayoutParams(
@@ -157,14 +166,34 @@ class BalochiInputMethod : InputMethodService() {
 
             for (key in row) {
                 val keyButton = Button(this).apply {
-                    text = if (key == " ") "␣" else key // Minimal space indicator
+                    var displayKey = key
+                    if (!isBalorabi && !isShiftActive && key.length == 1 && key[0].isLetter()) {
+                        displayKey = key.lowercase()
+                    }
                     
-                    // Set custom colors dynamically from user choices!
-                    setBackgroundColor(keyBgColor)
+                    text = if (displayKey == " " || displayKey == "SPACE") "␣" else displayKey
+                    
+                    // 1. DYNAMIC HIGH-AESTHETIC STYLING (MATCHING FLUTTER EXACTLY!)
+                    // Generate beautiful rounded keycaps with smooth elevations
+                    val keyDrawable = GradientDrawable().apply {
+                        setColor(keyBgColor)
+                        cornerRadius = 16f // 16px corner radius for nice, modern rounded keycaps!
+                        setStroke(1, 0x1A000000) // Soft outline
+                    }
+                    background = keyDrawable
                     setTextColor(keyTextColor)
+                    elevation = 4f // Key shadow
+                    
+                    // Apply offline Amiri font!
+                    if (amiriTypeface != null) {
+                        typeface = amiriTypeface
+                        textSize = 18f
+                    } else {
+                        textSize = 16f
+                    }
                     
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f).apply {
-                        setMargins(2, 2, 2, 2)
+                        setMargins(4, 4, 4, 4) // Spacings matching Flutter's margins!
                     }
                     setOnClickListener { handleKeyPress(key) }
                     setOnLongClickListener { 
@@ -194,7 +223,7 @@ class BalochiInputMethod : InputMethodService() {
                 ic.deleteSurroundingText(1, 0)
                 updateWordPredictions("")
             }
-            "مان", "⏎" -> {
+            "مان", "⏎", "Màn" -> {
                 ic.commitText("\n", 1)
                 updateWordPredictions("")
             }
@@ -206,18 +235,26 @@ class BalochiInputMethod : InputMethodService() {
                 isBalorabi = true
                 setupKeyboardLayout()
             }
+            "⬆" -> {
+                isShiftActive = !isShiftActive
+                setupKeyboardLayout()
+            }
             "؟۱۲۳", "?123" -> {
-                // Symbol toggles can be mapped to layout changes if needed
+                // Symbol toggles
             }
             else -> {
-                // Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
+                var typedKey = key
+                if (!isBalorabi && !isShiftActive && key.length == 1) {
+                    typedKey = key.lowercase()
+                }
+
                 val preceding = ic.getTextBeforeCursor(1, 0)
-                if (preceding != null && preceding == "ے" && key.isNotEmpty() && !isPunctuation(key)) {
+                if (preceding != null && preceding == "ے" && typedKey.isNotEmpty() && !isPunctuation(typedKey)) {
                     ic.deleteSurroundingText(1, 0)
                     ic.commitText("ݔ", 1)
                 }
                 
-                ic.commitText(key, 1)
+                ic.commitText(typedKey, 1)
                 val currentWord = ic.getTextBeforeCursor(10, 0)?.split(" ")?.lastOrNull() ?: ""
                 updateWordPredictions(currentWord.toString())
             }
@@ -239,6 +276,9 @@ class BalochiInputMethod : InputMethodService() {
         for (alt in alternatives) {
             val altButton = Button(this).apply {
                 text = alt
+                if (amiriTypeface != null) {
+                    typeface = amiriTypeface
+                }
                 setOnClickListener {
                     val ic: InputConnection = currentInputConnection
                     ic.commitText(alt, 1)
@@ -262,8 +302,11 @@ class BalochiInputMethod : InputMethodService() {
             val suggestionView = TextView(this).apply {
                 text = word
                 textSize = 16f
+                if (amiriTypeface != null) {
+                    typeface = amiriTypeface
+                }
                 setPadding(20, 10, 20, 10)
-                setTextColor(keyTextColor) // Unified customizable textColor
+                setTextColor(keyTextColor)
                 setOnClickListener {
                     replaceCurrentWord(currentWord, word)
                 }
@@ -290,6 +333,9 @@ class BalochiInputMethod : InputMethodService() {
                 val clipView = TextView(this).apply {
                     text = "📋 " + if (clipText.length > 15) clipText.take(12) + "..." else clipText
                     textSize = 14f
+                    if (amiriTypeface != null) {
+                        typeface = amiriTypeface
+                    }
                     setPadding(15, 10, 15, 10)
                     setTextColor(keyTextColor)
                     setOnClickListener {

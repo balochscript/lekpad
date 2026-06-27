@@ -80,10 +80,19 @@ jobs:
           # Run python script to automatically inject service to AndroidManifest.xml
           python scripts/inject_android.py
           
+          # Download Amiri font assets dynamically for offline packaging
+          mkdir -p assets/fonts
+          curl -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf
+          curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
+          
+          # Pre-install dependencies and generate native app launcher icons automatically!
+          flutter pub get
+          dart run flutter_launcher_icons
+          
           # Clean up temp directory
           rm -rf temp_custom
 
-      # Step 5: Install dependencies
+      # Step 5: Install dependencies (secondary check)
       - name: Install dependencies
         run: flutter pub get
 
@@ -155,11 +164,20 @@ jobs:
           # Put iOS custom Swift code in place
           cp temp_custom/ios/KeyboardViewController.swift ios/
           
+          # Download Amiri font assets dynamically for offline packaging
+          mkdir -p assets/fonts
+          curl -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf
+          curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
+          
           # Install CocoaPods gem required for Xcode project manipulation
           gem install xcodeproj
           
           # Programmatically configure iOS App Keyboard Extension target in Xcode
           ruby scripts/setup_ios.rb
+          
+          # Generate native launcher icons on macOS too
+          flutter pub get
+          dart run flutter_launcher_icons
           
           rm -rf temp_custom
 

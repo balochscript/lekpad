@@ -186,6 +186,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   // Shift state for Balotin layout
   bool _isShiftActive = false;
 
+  // Real-time floating long-press bubble popup states (Sleek UI/UX!)
+  String? _longPressKey;
+  List<String> _longPressAlternatives = [];
+  Offset? _longPressPosition;
+
   @override
   void initState() {
     super.initState();
@@ -343,223 +348,293 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       ),
       body: Directionality(
         textDirection: textDirection,
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Unified App Header
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: accentGold.withOpacity(0.3), width: 1.5),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                            colors: isDark 
-                                ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-                                : [Colors.white, const Color(0xFFF1F5F9)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+            Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Unified App Header
+                        Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: accentGold.withOpacity(0.3), width: 1.5),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                colors: isDark 
+                                    ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                                    : [Colors.white, const Color(0xFFF1F5F9)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                children: [
+                                  // Displays actual transparent png icon inside app UI!
+                                  Container(
+                                    width: 75,
+                                    height: 75,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: accentGold.withOpacity(0.3),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        )
+                                      ]
+                                    ),
+                                    child: Image.asset(
+                                      'images/icon.png',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    widget.previousScript == 'balorabi' ? 'بلۏچی (balochi)' : 'balochi (بلۏچی)',
+                                    style: GoogleFonts.amiri(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: accentGold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _getLocalizedText('about_text'),
+                                    style: GoogleFonts.amiri(
+                                      fontSize: 16,
+                                      color: isDark ? Colors.grey[300] : Colors.grey[800],
+                                      height: 1.5,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
+                        const SizedBox(height: 16),
+
+                        // Quick Settings (Redankan) with active OS links!
+                        Text(
+                          _getLocalizedText('settings'),
+                          style: GoogleFonts.amiri(
+                            fontSize: 20, 
+                            fontWeight: FontWeight.bold,
+                            color: accentGold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildSettingButton(
+                          context,
+                          icon: Icons.keyboard_capslock,
+                          title: _getLocalizedText('enable_keyboard'),
+                          accentGold: accentGold,
+                          onTap: _enableKeyboard, 
+                        ),
+                        _buildSettingButton(
+                          context,
+                          icon: Icons.touch_app_outlined,
+                          title: _getLocalizedText('choose_keyboard'),
+                          accentGold: accentGold,
+                          onTap: _chooseKeyboard, 
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        // Themes (Rangbandi) & Custom Colors Panel!
+                        Text(
+                          _getLocalizedText('themes'),
+                          style: GoogleFonts.amiri(
+                            fontSize: 20, 
+                            fontWeight: FontWeight.bold,
+                            color: accentGold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: accentGold.withOpacity(0.1)),
+                          ),
                           child: Column(
                             children: [
-                              // Displays actual transparent png icon inside app UI!
-                              Container(
-                                width: 75,
-                                height: 75,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: accentGold.withOpacity(0.3),
-                                      blurRadius: 10,
-                                      spreadRadius: 2,
-                                    )
-                                  ]
-                                ),
-                                child: Image.asset(
-                                  'images/icon.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                widget.previousScript == 'balorabi' ? 'بلۏچی (balochi)' : 'balochi (بلۏچی)',
-                                style: GoogleFonts.amiri(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: accentGold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                _getLocalizedText('about_text'),
-                                style: GoogleFonts.amiri(
-                                  fontSize: 16,
-                                  color: isDark ? Colors.grey[300] : Colors.grey[800],
-                                  height: 1.5,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Quick Settings (Redankan) with active OS links!
-                    Text(
-                      _getLocalizedText('settings'),
-                      style: GoogleFonts.amiri(
-                        fontSize: 20, 
-                        fontWeight: FontWeight.bold,
-                        color: accentGold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildSettingButton(
-                      context,
-                      icon: Icons.keyboard_capslock,
-                      title: _getLocalizedText('enable_keyboard'),
-                      accentGold: accentGold,
-                      onTap: _enableKeyboard, 
-                    ),
-                    _buildSettingButton(
-                      context,
-                      icon: Icons.touch_app_outlined,
-                      title: _getLocalizedText('choose_keyboard'),
-                      accentGold: accentGold,
-                      onTap: _chooseKeyboard, 
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    // Themes (Rangbandi) & Custom Colors Panel!
-                    Text(
-                      _getLocalizedText('themes'),
-                      style: GoogleFonts.amiri(
-                        fontSize: 20, 
-                        fontWeight: FontWeight.bold,
-                        color: accentGold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: accentGold.withOpacity(0.1)),
-                      ),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(isDark ? Icons.nights_stay : Icons.wb_sunny, color: accentGold),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      isDark ? _getLocalizedText('night_mode') : _getLocalizedText('day_mode'),
-                                      style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.w500),
+                                    Row(
+                                      children: [
+                                        Icon(isDark ? Icons.nights_stay : Icons.wb_sunny, color: accentGold),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          isDark ? _getLocalizedText('night_mode') : _getLocalizedText('day_mode'),
+                                          style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.w500),
+                                        ),
+                                      ],
+                                    ),
+                                    Switch(
+                                      value: isDark,
+                                      activeColor: accentGold,
+                                      onChanged: widget.onThemeChanged,
                                     ),
                                   ],
                                 ),
-                                Switch(
-                                  value: isDark,
-                                  activeColor: accentGold,
-                                  onChanged: widget.onThemeChanged,
+                              ),
+                              const Divider(height: 1),
+                              // Custom Colors Customization Suite (Bg, Key, Text)
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'کیبورڈءِ رنگبندی (Custom Key Colors)',
+                                      style: GoogleFonts.amiri(fontSize: 16, fontWeight: FontWeight.bold, color: accentGold),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        _buildColorPickerButton('پس‌زمینه (Bg)', widget.kbBgColor, (color) {
+                                          widget.onColorsChanged(color, widget.keyBgColor, widget.keyTextColor);
+                                        }),
+                                        _buildColorPickerButton('دکمه‌ها (Key)', widget.keyBgColor, (color) {
+                                          widget.onColorsChanged(widget.kbBgColor, color, widget.keyTextColor);
+                                        }),
+                                        _buildColorPickerButton('حروف (Text)', widget.keyTextColor, (color) {
+                                          widget.onColorsChanged(widget.kbBgColor, widget.keyBgColor, color);
+                                        }),
+                                      ],
+                                    )
+                                  ],
                                 ),
-                              ],
+                              )
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+                        // Typing test
+                        Text(
+                          _getLocalizedText('test_typing'),
+                          style: GoogleFonts.amiri(
+                            fontSize: 20, 
+                            fontWeight: FontWeight.bold,
+                            color: accentGold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _textController,
+                          maxLines: 2,
+                          autofocus: true,
+                          readOnly: true, // typed on simulator below
+                          showCursor: true,
+                          style: GoogleFonts.amiri(fontSize: 18),
+                          decoration: InputDecoration(
+                            hintText: widget.previousScript == 'balorabi' 
+                                ? 'بنویس اتدا... (نبیسگ)' 
+                                : 'Nabèsag-a bنگیج کن...',
+                            hintStyle: GoogleFonts.amiri(color: Colors.grey),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: accentGold),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: accentGold, width: 2),
                             ),
                           ),
-                          const Divider(height: 1),
-                          // Custom Colors Customization Suite (Bg, Key, Text)
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'کیبورڈءِ رنگبندی (Custom Key Colors)',
-                                  style: GoogleFonts.amiri(fontSize: 16, fontWeight: FontWeight.bold, color: accentGold),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _buildColorPickerButton('پس‌زمینه (Bg)', widget.kbBgColor, (color) {
-                                      widget.onColorsChanged(color, widget.keyBgColor, widget.keyTextColor);
-                                    }),
-                                    _buildColorPickerButton('دکمه‌ها (Key)', widget.keyBgColor, (color) {
-                                      widget.onColorsChanged(widget.kbBgColor, color, widget.keyTextColor);
-                                    }),
-                                    _buildColorPickerButton('حروف (Text)', widget.keyTextColor, (color) {
-                                      widget.onColorsChanged(widget.kbBgColor, widget.keyBgColor, color);
-                                    }),
-                                  ],
-                                )
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    // Typing test
-                    Text(
-                      _getLocalizedText('test_typing'),
-                      style: GoogleFonts.amiri(
-                        fontSize: 20, 
-                        fontWeight: FontWeight.bold,
-                        color: accentGold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _textController,
-                      maxLines: 2,
-                      autofocus: true,
-                      readOnly: true, // typed on simulator below
-                      showCursor: true,
-                      style: GoogleFonts.amiri(fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: widget.previousScript == 'balorabi' 
-                            ? 'بنویس اتدا... (نبیسگ)' 
-                            : 'Nabèsag-a bنگیج کن...',
-                        hintStyle: GoogleFonts.amiri(color: Colors.grey),
-                        filled: true,
-                        fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: accentGold),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: accentGold, width: 2),
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+
+                // ON-SCREEN KEYBOARD SYNCHRONIZED TO CUSTOM CHOSEN COLORS
+                _buildKeyboardUI(isDark, accentGold, crimsonThread),
+              ],
             ),
 
-            // ON-SCREEN KEYBOARD SYNCHRONIZED TO CUSTOM CHOSEN COLORS
-            _buildKeyboardUI(isDark, accentGold, crimsonThread),
+            // SLEEK FLOATING BUBBLE OVERLAY POPUP (Appears directly above long-pressed keys!)
+            _buildFloatingBubblePopup(isDark, accentGold),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingBubblePopup(bool isDark, Color accentGold) {
+    if (_longPressKey == null || _longPressPosition == null) return const SizedBox.shrink();
+
+    // Calculate elegant width and centering
+    final bubbleWidth = (_longPressAlternatives.length * 52.0) + 20.0;
+    double leftPosition = _longPressPosition!.dx - (bubbleWidth / 2);
+    if (leftPosition < 10) leftPosition = 10; // Prevent screen boundary overflow left
+
+    return Positioned(
+      left: leftPosition,
+      top: _longPressPosition!.dy - 90, // Positions floating bubble perfectly above finger!
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: widget.keyBgColor, 
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: accentGold, width: 1.5), // Glowing gold border matching Option 2!
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 10,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              )
+            ]
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: _longPressAlternatives.map((alt) {
+              return GestureDetector(
+                onTap: () {
+                  _insertText(alt);
+                  setState(() {
+                    _longPressKey = null;
+                    _longPressPosition = null;
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF334155) : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    alt,
+                    style: GoogleFonts.amiri(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: widget.keyTextColor,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
@@ -813,9 +888,15 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           _insertText(typedKey);
         }
       },
-      onLongPress: () {
-        if (BalochiConfig.keyAlternativeSelections.containsKey(key)) {
-          _showAlternativeSelector(key, isDark, accentGold);
+      onLongPressStart: (details) {
+        // Activates the real-time floating bubble popup directly above their finger!
+        final alternatives = BalochiConfig.keyAlternativeSelections[key] ?? [];
+        if (alternatives.isNotEmpty) {
+          setState(() {
+            _longPressKey = key;
+            _longPressAlternatives = alternatives;
+            _longPressPosition = details.globalPosition; // Captured precise pixel coordinates!
+          });
         }
       },
       child: Container(
@@ -852,61 +933,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           ],
         ),
       ),
-    );
-  }
-
-  void _showAlternativeSelector(String mainKey, bool isDark, Color accentGold) {
-    final alternatives = BalochiConfig.keyAlternativeSelections[mainKey] ?? [];
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${_getLocalizedText('settings')} : $mainKey',
-                  style: GoogleFonts.amiri(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: alternatives.map((alt) {
-                    return InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _insertText(alt);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: accentGold.withOpacity(0.3)), 
-                        ),
-                        child: Text(
-                          alt,
-                          style: GoogleFonts.amiri(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

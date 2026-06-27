@@ -48,8 +48,8 @@ jobs:
           mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
-          # Scaffold the Flutter project in a subfolder
-          flutter create --org com.example lekpad_scaffold
+          # Scaffold the Flutter project specifying package name: bc.lekpad.balochi
+          flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
           # Move scaffolded project up to root level
           mv lekpad_scaffold/* .
@@ -62,9 +62,9 @@ jobs:
           cp -r temp_custom/images/* images/
           cp temp_custom/pubspec.yaml .
           
-          # Move Android custom Kotlin file and XML resources to the correct package path
-          mkdir -p android/app/src/main/kotlin/com/example/lekpad
-          cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/com/example/lekpad/
+          # Move Android custom Kotlin file and XML resources to the correct package path: bc/lekpad/balochi
+          mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
+          cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/
           
           mkdir -p android/app/src/main/res/xml
           mkdir -p android/app/src/main/res/layout
@@ -131,7 +131,8 @@ jobs:
           mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
-          flutter create --org com.example lekpad_scaffold
+          # Force package name: bc.lekpad.balochi on iOS too
+          flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
           mv lekpad_scaffold/* .
           mv lekpad_scaffold/.[!.]* . || true
@@ -153,11 +154,11 @@ jobs:
           
           rm -rf temp_custom
 
-      # Step 4: Install dependencies (Letting Flutter generate Podfile automatically during build)
+      # Step 4: Install dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 5: Build iOS app bundle (unsigned for CI/CD - pod install is invoked automatically here)
+      # Step 5: Build iOS app bundle (unsigned for CI/CD)
       - name: Build iOS (No Codesign)
         run: flutter build ios --release --no-codesign
 

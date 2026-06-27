@@ -327,6 +327,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Unified Luxury App Header
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -348,13 +349,12 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
                             children: [
+                              // Displays actual transparent png icon inside app UI!
                               Container(
-                                width: 70,
-                                height: 70,
+                                width: 75,
+                                height: 75,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0F172A),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: accentGold, width: 2), 
                                   boxShadow: [
                                     BoxShadow(
                                       color: accentGold.withOpacity(0.3),
@@ -363,20 +363,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                     )
                                   ]
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    'ل',
-                                    style: GoogleFonts.amiri(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
-                                      color: accentGold,
-                                    ),
-                                  ),
+                                child: Image.asset(
+                                  'images/icon.png',
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                widget.previousScript == 'balorabi' ? 'لِکپَد (Lekpad)' : 'Lekpad (لِکپَد)',
+                                widget.previousScript == 'balorabi' ? 'بلۏچی (balochi)' : 'balochi (بلۏچی)',
                                 style: GoogleFonts.amiri(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -401,6 +395,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Quick Settings (Redankan) with active OS links!
                     Text(
                       _getLocalizedText('settings'),
                       style: GoogleFonts.amiri(
@@ -415,17 +410,18 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                       icon: Icons.keyboard_capslock,
                       title: _getLocalizedText('enable_keyboard'),
                       accentGold: accentGold,
-                      onTap: _enableKeyboard,
+                      onTap: _enableKeyboard, // Actively opens OS settings
                     ),
                     _buildSettingButton(
                       context,
                       icon: Icons.touch_app_outlined,
                       title: _getLocalizedText('choose_keyboard'),
                       accentGold: accentGold,
-                      onTap: _chooseKeyboard,
+                      onTap: _chooseKeyboard, // Actively triggers OS input picker
                     ),
                     
                     const SizedBox(height: 16),
+                    // Themes (Rangbandi) & Custom Colors Panel!
                     Text(
                       _getLocalizedText('themes'),
                       style: GoogleFonts.amiri(
@@ -466,6 +462,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                             ),
                           ),
                           const Divider(height: 1),
+                          // Custom Colors Customization Suite (Bg, Key, Text)
                           Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Column(
@@ -497,6 +494,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     ),
 
                     const SizedBox(height: 16),
+                    // Typing test
                     Text(
                       _getLocalizedText('test_typing'),
                       style: GoogleFonts.amiri(
@@ -704,12 +702,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     Color finalBg = keyBg;
     Widget keyLabel;
 
-    // Minimal Spacebar render matching standard style!
     if (key == ' ' || key == 'SPACE') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
       keyLabel = Container(
         height: 12,
-        width: 140, // Elegant wide spacebar!
+        width: 140, 
         decoration: BoxDecoration(
           color: isDark ? accentGold.withOpacity(0.5) : accentGold,
           borderRadius: BorderRadius.circular(2),
@@ -741,7 +738,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       );
     } else if (key == '🌐') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-      keyLabel = Icon(Icons.language, color: accentGold, size: 20); // Minimal global icon instead of text
+      keyLabel = Icon(Icons.language, color: accentGold, size: 20); 
     } else if (key == '← 1/2' || key == '2/2 →' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀') {
       finalBg = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
       keyLabel = Text(
@@ -768,7 +765,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         } else if (key == 'اب ...') {
           widget.onModeChanged('balorabi');
         } else if (key == '🌐') {
-          // Quick globe switch
           widget.onModeChanged(widget.previousScript == 'balorabi' ? 'balotin' : 'balorabi');
         } else if (key == '؟۱۲۳' || key == '?123') {
           widget.onModeChanged('symbols1'); 

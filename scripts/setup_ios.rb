@@ -82,9 +82,9 @@ plist_file_ref = group.new_file("#{extension_dir}/Info.plist")
 # 7. Add Swift file to compilation sources
 extension_target.add_file_references([swift_file_ref])
 
-# 8. Configure build settings for the Extension Target
+# 8. Configure build settings for the Extension Target (Fixed path relative to Xcode's ios/ root directory)
 extension_target.build_configurations.each do |config|
-  config.build_settings['INFOPLIST_FILE'] = "#{extension_dir}/Info.plist"
+  config.build_settings['INFOPLIST_FILE'] = "#{extension_name}/Info.plist" # FIXED: Relative to Xcode root directory (removes double 'ios/')
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "com.example.lekpad.#{extension_name}"
   config.build_settings['PRODUCT_NAME'] = '$(TARGET_NAME)'
   config.build_settings['SKIP_INSTALL'] = 'YES'

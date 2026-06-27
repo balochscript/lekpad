@@ -1,6 +1,6 @@
-name: Lekpad
+name: lekpad
 description: A standard Balochi keyboard named Lekpad with Balorabi and Balotin support.
-version: 1.0.0+8
+version: 1.0.0+1
 
 publish_to: 'none'
 
@@ -11,17 +11,28 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
-  google_fonts: ^6.1.0 # Standard free font loader for "Amiri" and others
   shared_preferences: ^2.2.2 # For saving customizable theme colors securely to share with Android/iOS keyboard
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1 # Automatically generates native app launcher icons on the fly!
+
+# 1. Automatic App Launcher Icon Generator Config (Using your premium Option 2 icon.png)
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images/icon.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
 
-  # Asset declaration to load and display the Lekpad transparent app logo inside the Flutter app!
-  assets:
-    - images/icon.png
+  # 2. Local Font Assets (Bundles Amiri font locally for offline system keyboard usage)
+  fonts:
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+        - asset: assets/fonts/Amiri-Bold.ttf
+          weight: 700

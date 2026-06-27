@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0 # Standard free font loader for "Amiri" and others
+  shared_preferences: ^2.2.2 # For saving customizable theme colors securely to share with Android/iOS keyboard
 
 dev_dependencies:
   flutter_test:
@@ -20,14 +21,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  # If you prefer to download and include the Amiri font files offline,
-  # download "Amiri-Regular.ttf" and "Amiri-Bold.ttf" from Google Fonts,
-  # place them in an "assets/fonts/" folder, and uncomment the section below:
-  #
-  # fonts:
-  #   - family: Amiri
-  #     fonts:
-  #       - asset: assets/fonts/Amiri-Regular.ttf
-  #       - asset: assets/fonts/Amiri-Bold.ttf
-  #         weight: 700

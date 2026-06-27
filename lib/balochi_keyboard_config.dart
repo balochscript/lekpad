@@ -52,8 +52,7 @@ class BalochiConfig {
     }
   };
 
-  // 2. Comprehensive Balochi Standard Prediction Dictionary (Including greetings & @SarOSouj vocabulary)
-  // Strictly validated: DOES NOT contain forbidden characters: ظطضصثقفغعخ
+  // 2. Comprehensive Balochi Standard Prediction Dictionary (no ظطضصثقفغعخ)
   static const List<String> predictionVocabulary = [
     // Standard BSA
     'اَرس', 'آماد', 'آسمان', 'آسبار', 'بَرۏت', 'رُمب', 'چانٚک', 'دو چاپی', 'دیوال', 'دراج',
@@ -63,13 +62,12 @@ class BalochiConfig {
     'سَنگَت', 'سُھل', 'شاشک', 'شَش', 'شَھدَربرجاہ', 'تَل', 'تَلار', 'ٹاک', 'ٹراشو', 'ھور',
     'وئیل', 'واھَگ', 'یَل', 'زَھیر', 'زِڈڈ', 'زال', 'ژانگ', 'بوژ', 'بلۏچ', 'بلۏچستان',
     'بلۏچی', 'وانگ', 'جنک', 'لوگ', 'پاد', 'پاچن', 'پنج', 'مرد', 'مردین', 'جنین',
-    // Greetings (احوالپرسی) from madaran.net & SarOSouj
+    // Greetings (Jòďi)
     'سَلام', 'والِک', 'چونَے', 'چونے', 'مَن', 'وشوں', 'تَو', 'هَں', 'چہ', 'هال', 'اِنت', 
     'وَش', 'سَلامتے', 'جۏڑی',
-    // Weather & Words from t.me/SarOSouj
+    // Weather & Concepts
     'هَور', 'جمبر', 'استین', 'استون', 'گرند', 'گُرۏک', 'ترَمپ', 'ترۏنگل', 'گوات', 'سَنگُل', 
     'سُهر', 'بیر', 'گوارَگ', 'هار', 'کَور', 'شݔپ', 'لوڈ', 'لَهڈ', 
-    // Concepts & Adjectives from t.me/SarOSouj
     'بچَّگ', 'بچّنَگ', 'بچّنۏک', 'بچِّتگیں', 'بچّنتگ', 'بچّۏک', 'مُسام', 'نِمرۏچ', 
     'وَڈݔنَگ', 'وَڈݔنۏک', 'جۏڈݔنَگ', 'جۏڈݔنۏک', 'بَنݔنَگ', 'بَنݔنۏک', 'بَنݔنتگیں', 'اَڈ', 
     'شَرر', 'شؤک', 'زَبَردَست'
@@ -84,41 +82,39 @@ class BalochiConfig {
     'Sangat', 'Suhl', 'Šàšk', 'Šaš', 'Šahdarbarjàh', 'Tal', 'Talàr', 'Ťak', 'Ťràšò', 'Hur',
     'Wail', 'Wàhag', 'Yal', 'Zahèr', 'Ziďď', 'Zàl', 'Žàng', 'Bòž', 'Balòc', 'Balòcestàn',
     'Balòcī', 'Wànag', 'Janek', 'Lúg', 'Pàd', 'Pàcen', 'Panč', 'Mard', 'Marden', 'Janèn',
-    // Greetings (Jòďi)
-    'Salàm', 'Vàlaik', 'Čònai', 'Man', 'Vašaon', 'Tà', 'Han', 'Ce', 'Hàl', 'Ent', 'Vaš', 
-    'Salàmati', 'Jòďī',
-    // Weather & Concepts
+    // Greetings
+    'Salàm', 'Vàlaik', 'Čònai', 'Man', 'Vašaon', 'Tà', 'Han', 'Ce', 'Hàl', 'Ent', 'Vaš', 'Salàmati', 'Jòďī',
     'Haur', 'Jambar', 'Estin', 'Estun', 'Grand', 'Goròk', 'Tramp', 'Tròngal', 'Guàt', 'Sangol', 
     'Sohr', 'Bir', 'Guàrag', 'Hàr', 'Kaur', 'Šèp', 'Luď', 'Lahď', 'Baččag', 'Baččènag', 
     'Baččènòk', 'Bačchetagèn', 'Baččèntag', 'Baččòk', 'Musàm', 'Nimròc', 'Waďènag', 'Waďènòk', 
     'Jòďènag', 'Jòďènòk', 'Banènag', 'Banènòk', 'Banèntagèn', 'Aď', 'Šarr', 'Šauk', 'Zabardast'
   ];
 
-  // 3. Precise Balòrabi Layout Definition (Matching bottom keyboard in image, with "ۏ" in Row 1!)
+  // 3. Precise Balòrabi Layout Definition (with "ھ" instead of "هـ", and "۔" for Balochi full stop)
   static const List<List<String>> balorabiLayout = [
-    ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], // Row 0: Numbers
-    ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'هـ', 'ج', 'چ', 'ءِ'], // Row 1: Fixed: replaced 'و' with 'ۏ' as requested!
-    ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], // Row 2: Standard consonants
-    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', 'پاکے'], // Row 3: Command & Consonants
-    ['؟۱۲۳', 'ABC', 'SPACE', '-', 'مان'] // Row 4: Action bar (Màn as Enter, Non-emoji Symbol toggle)
+    ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], 
+    ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'ھ', 'ج', 'چ', 'ءِ'], // FIXED: Replaced 'هـ' with 'ھ'
+    ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], 
+    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', 'پاکے'], 
+    ['؟۱۲۳', '🌐', ' ', '۔', 'مان'] // FIXED: Space label is empty/space, dash replaced with '۔' (full stop)
   ];
 
   // 4. Precise Balòtin Layout Definition
   static const List<List<String>> balotinLayout = [
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], // Row 0: Numbers
-    ['À', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'], // Row 1
-    ['A', 'Š', 'S', 'D', 'Ď', 'G', 'H', 'J', 'K', 'L', 'Ò'], // Row 2
-    ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', 'Pàk'], // Row 3
-    ['?123', 'اب ...', 'SPACE', '.', 'Màn'] // Row 4 (Màn as Enter!)
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], 
+    ['À', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'], 
+    ['A', 'Š', 'S', 'D', 'Ď', 'G', 'H', 'J', 'K', 'L', 'Ò'], 
+    ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', 'Pàk'], 
+    ['?123', '🌐', ' ', '.', 'Màn'] // Minimalist globe icon instead of text labels
   ];
 
-  // 5. Symbols Page 1 Layout
+  // 5. Symbols Page 1 Layout (Mathematical & Standard Symbols)
   static const List<List<String>> symbolsLayout1 = [
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
     ['+', '×', '÷', '=', '٪', '^', '!', '@', '#', '\$'],
     ['/', '\\', '~', '*', '(', ')', '-', '_', '|', '&'],
-    ['صفحہ ۲ ◀', '[', ']', '{', '}', '<', '>', '❂', 'Pàk'],
-    ['اب/ABC', 'SPACE', 'Màn']
+    ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', 'Pàk'], // Minimalist Page switcher
+    ['🌐', ' ', 'Màn']
   ];
 
   // 6. Symbols Page 2 Layout (With "مان" as Enter key)
@@ -126,13 +122,13 @@ class BalochiConfig {
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'],
     ['،', '؟', '?', '.', ',', ':', ';', '"', '\'', '|'],
     ['❂', 'Ꝃ', '★', '☆', '✦', '❖', '◈', '✿', '✛', '✜'],
-    ['صفحہ ۱ ◀', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', 'پاکے'],
-    ['اب/ABC', 'SPACE', 'مان']
+    ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', 'پاکے'], // Minimalist Page switcher
+    ['🌐', ' ', 'مان']
   ];
 
   // 7. Refined High-fidelity Long Press & Alternative Letters Mappings
-  // Removed redundant alternates like Ó/È on E/O since they are on the main face.
-  // Mapped less common standard Balòtin letters F, V, X, Q, Ĝ, Ř as long-press options!
+  // Added 'ہ' (Choti He) under 'ھ'
+  // Added 'ـ' (Tatweel/Kashida) under '۔' or '-'
   static const Map<String, String> keyVisualAlternativeHints = {
     // Balorabi
     'پ': 'ف',
@@ -146,7 +142,7 @@ class BalochiConfig {
     'ٹ': 'ط',
     'ۏ': 'و',
     'ء': 'ع',
-    'هـ': 'ح',
+    'ھ': 'ہ', // Visual hint for Choti He
     'ج': 'ح',
     'چ': 'خ',
     'ژ': 'ظ',
@@ -155,7 +151,8 @@ class BalochiConfig {
     'د': 'ذ',
     'ک': 'ق',
     'گ': 'غ',
-    // Balotin (No redundant hints, now shows less common standard letters)
+    '۔': 'ـ', // Visual hint for Tatweel/Kashida
+    // Balotin
     'P': 'F',
     'W': 'V',
     'K': 'X',
@@ -163,7 +160,7 @@ class BalochiConfig {
     'R': 'Ř',
   };
 
-  // Full lists of alternatives for popups (Completely cleared of redundant main-key letters!)
+  // Full lists of alternatives for popups
   static const Map<String, List<String>> keyAlternativeSelections = {
     // Balorabi
     'ت': ['ث', 'ط'],
@@ -176,7 +173,7 @@ class BalochiConfig {
     'گ': ['غ'],
     'پ': ['ف'],
     'ک': ['ق'],
-    'هـ': ['ح', 'ھ', 'ه'],
+    'ھ': ['ہ', 'هـ', 'ح', 'ه'], // Included Choti He 'ہ' and Do-Chashmi variations
     'ء': ['ع', 'ءَ', 'ءِ', 'ءُ'],
     'و': ['ۏ', 'ؤ', 'وْ', 'وُ'],
     'ۏ': ['و', 'ؤ', 'وْ', 'وُ'],
@@ -184,8 +181,9 @@ class BalochiConfig {
     'ن': ['ں', 'نٚ'],
     'ر': ['ڑ'],
     'ژ': ['ظ'],
+    '۔': ['ـ', '—', '-'], // Tatweel/Kashida 'ـ' mapped perfectly under '۔'
     
-    // Balotin (Non-redundant: F, V, X, Q, Ĝ, Ř mapped correctly under closest phonetic keys)
+    // Balotin
     'P': ['F'],
     'W': ['V'],
     'K': ['Q', 'X'],

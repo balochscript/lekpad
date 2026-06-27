@@ -1,6 +1,7 @@
 // Lekpad Standard Keyboard Configuration, Layout Mappings, Dictionary, and Symbols
 class BalochiConfig {
   // 1. Dual-Script Localization Dictionary (Balòrabi & Balòtin)
+  // Restored app display name to "Lekpad" (لِکپَد) as requested!
   static const Map<String, Map<String, String>> localizations = {
     'app_title': {
       'balorabi': 'لِکپَد',
@@ -90,13 +91,13 @@ class BalochiConfig {
     'Jòďènag', 'Jòďènòk', 'Banènag', 'Banènòk', 'Banèntagèn', 'Aď', 'Šarr', 'Šauk', 'Zabardast'
   ];
 
-  // 3. Precise Balòrabi Layout Definition (with "ھ" instead of "هـ", and "۔" for Balochi full stop)
+  // 3. Precise Balòrabi Layout Definition (Matching bottom keyboard in image, with "ۏ" in Row 1!)
   static const List<List<String>> balorabiLayout = [
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], 
     ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'ھ', 'ج', 'چ', 'ءِ'], // FIXED: Replaced 'هـ' with 'ھ'
     ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], 
     ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', 'پاکے'], 
-    ['؟۱۲۳', '🌐', ' ', '۔', 'مان'] // FIXED: Space label is empty/space, dash replaced with '۔' (full stop)
+    ['؟۱۲۳', '🌐', ' ', '۔', 'مان'] 
   ];
 
   // 4. Precise Balòtin Layout Definition
@@ -105,30 +106,28 @@ class BalochiConfig {
     ['À', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'], 
     ['A', 'Š', 'S', 'D', 'Ď', 'G', 'H', 'J', 'K', 'L', 'Ò'], 
     ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', 'Pàk'], 
-    ['?123', '🌐', ' ', '.', 'Màn'] // Minimalist globe icon instead of text labels
+    ['?123', '🌐', ' ', '.', 'Màn'] 
   ];
 
-  // 5. Symbols Page 1 Layout (Mathematical & Standard Symbols)
+  // 5. Symbols Page 1 Layout
   static const List<List<String>> symbolsLayout1 = [
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
     ['+', '×', '÷', '=', '٪', '^', '!', '@', '#', '\$'],
     ['/', '\\', '~', '*', '(', ')', '-', '_', '|', '&'],
-    ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', 'Pàk'], // Minimalist Page switcher
+    ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', 'Pàk'], 
     ['🌐', ' ', 'Màn']
   ];
 
-  // 6. Symbols Page 2 Layout (With "مان" as Enter key)
+  // 6. Symbols Page 2 Layout
   static const List<List<String>> symbolsLayout2 = [
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'],
     ['،', '؟', '?', '.', ',', ':', ';', '"', '\'', '|'],
     ['❂', 'Ꝃ', '★', '☆', '✦', '❖', '◈', '✿', '✛', '✜'],
-    ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', 'پاکے'], // Minimalist Page switcher
+    ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', 'پاکے'], 
     ['🌐', ' ', 'مان']
   ];
 
   // 7. Refined High-fidelity Long Press & Alternative Letters Mappings
-  // Added 'ہ' (Choti He) under 'ھ'
-  // Added 'ـ' (Tatweel/Kashida) under '۔' or '-'
   static const Map<String, String> keyVisualAlternativeHints = {
     // Balorabi
     'پ': 'ف',
@@ -142,7 +141,7 @@ class BalochiConfig {
     'ٹ': 'ط',
     'ۏ': 'و',
     'ء': 'ع',
-    'ھ': 'ہ', // Visual hint for Choti He
+    'ھ': 'ہ', 
     'ج': 'ح',
     'چ': 'خ',
     'ژ': 'ظ',
@@ -151,7 +150,7 @@ class BalochiConfig {
     'د': 'ذ',
     'ک': 'ق',
     'گ': 'غ',
-    '۔': 'ـ', // Visual hint for Tatweel/Kashida
+    '۔': 'ـ', 
     // Balotin
     'P': 'F',
     'W': 'V',
@@ -173,7 +172,7 @@ class BalochiConfig {
     'گ': ['غ'],
     'پ': ['ف'],
     'ک': ['ق'],
-    'ھ': ['ہ', 'هـ', 'ح', 'ه'], // Included Choti He 'ہ' and Do-Chashmi variations
+    'ھ': ['ہ', 'هـ', 'ح', 'ه'], 
     'ء': ['ع', 'ءَ', 'ءِ', 'ءُ'],
     'و': ['ۏ', 'ؤ', 'وْ', 'وُ'],
     'ۏ': ['و', 'ؤ', 'وْ', 'وُ'],
@@ -181,7 +180,7 @@ class BalochiConfig {
     'ن': ['ں', 'نٚ'],
     'ر': ['ڑ'],
     'ژ': ['ظ'],
-    '۔': ['ـ', '—', '-'], // Tatweel/Kashida 'ـ' mapped perfectly under '۔'
+    '۔': ['ـ', '—', '-'], 
     
     // Balotin
     'P': ['F'],

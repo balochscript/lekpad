@@ -84,20 +84,20 @@ class BalochiConfig {
     'Balòcī', 'Wànag', 'Janek', 'Lúg', 'Pàd', 'Pàcen', 'Panč', 'Mard', 'Marden', 'Janèn',
     // Greetings
     'Salàm', 'Vàlaik', 'Čònai', 'Man', 'Vašaon', 'Tà', 'Han', 'Ce', 'Hàl', 'Ent', 'Vaš', 'Salàmati', 'Jòďī',
+    // Weather & Concepts
     'Haur', 'Jambar', 'Estin', 'Estun', 'Grand', 'Goròk', 'Tramp', 'Tròngal', 'Guàt', 'Sangol', 
     'Sohr', 'Bir', 'Guàrag', 'Hàr', 'Kaur', 'Šèp', 'Luď', 'Lahď', 'Baččag', 'Baččènag', 
     'Baččènòk', 'Bačchetagèn', 'Baččèntag', 'Baččòk', 'Musàm', 'Nimròc', 'Waďènag', 'Waďènòk', 
     'Jòďènag', 'Jòďènòk', 'Banènag', 'Banènòk', 'Banèntagèn', 'Aď', 'Šarr', 'Šauk', 'Zabardast'
   ];
 
-  // 3. Precise Balòrabi Layout Definition (with "ھ" instead of "هـ", and "۔" for Balochi full stop)
-  // Standardised non-character keys with minimal icon symbols (⌫ for Backspace, ⏎ for Enter)
+  // 3. Precise Balòrabi Layout Definition
   static const List<List<String>> balorabiLayout = [
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], 
     ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'ھ', 'ج', 'چ', 'ءِ'], 
     ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], 
-    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', '⌫'], // FIXED: Replaced 'پاکے' with minimal '⌫' icon!
-    ['؟۱۲۳', '🌐', ' ', '۔', '⏎'] // FIXED: Replaced 'مان' with minimal '⏎' icon!
+    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', '⌫'], 
+    ['؟۱۲۳', '🌐', ' ', '۔', '⏎'] 
   ];
 
   // 4. Precise Balòtin Layout Definition
@@ -105,8 +105,8 @@ class BalochiConfig {
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], 
     ['À', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'], 
     ['A', 'Š', 'S', 'D', 'Ď', 'G', 'H', 'J', 'K', 'L', 'Ò'], 
-    ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', '⌫'], // FIXED: Replaced 'Pàk' with minimal '⌫' icon!
-    ['?123', '🌐', ' ', '.', '⏎'] // FIXED: Replaced 'Màn' with minimal '⏎' icon!
+    ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', '⌫'], 
+    ['?123', '🌐', ' ', '.', 'Màn'] 
   ];
 
   // 5. Symbols Page 1 Layout
@@ -115,7 +115,7 @@ class BalochiConfig {
     ['+', '×', '÷', '=', '٪', '^', '!', '@', '#', '\$'],
     ['/', '\\', '~', '*', '(', ')', '-', '_', '|', '&'],
     ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', '⌫'], 
-    ['🌐', ' ', '⏎']
+    ['🌐', ' ', 'Màn']
   ];
 
   // 6. Symbols Page 2 Layout
@@ -124,10 +124,11 @@ class BalochiConfig {
     ['،', '؟', '?', '.', ',', ':', ';', '"', '\'', '|'],
     ['❂', 'Ꝃ', '★', '☆', '✦', '❖', '◈', '✿', '✛', '✜'],
     ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', '⌫'], 
-    ['🌐', ' ', '⏎']
+    ['🌐', ' ', 'مان']
   ];
 
   // 7. Refined High-fidelity Long Press & Alternative Letters Mappings
+  // Added standard Balochi vowel character "ۇ" under "ۏ"!
   static const Map<String, String> keyVisualAlternativeHints = {
     // Balorabi
     'پ': 'ف',
@@ -139,7 +140,7 @@ class BalochiConfig {
     'ی': 'ئ',
     'ڈ': 'ذ',
     'ٹ': 'ط',
-    'ۏ': 'و',
+    'ۏ': 'ۇ', // Visual hint updated to show the standard Balochi 'ۇ' vowel!
     'ء': 'ع',
     'ھ': 'ہ', 
     'ج': 'ح',
@@ -175,7 +176,7 @@ class BalochiConfig {
     'ھ': ['ہ', 'هـ', 'ح', 'ه'], 
     'ء': ['ع', 'ءَ', 'ءِ', 'ءُ'],
     'و': ['ۏ', 'ؤ', 'وْ', 'وُ'],
-    'ۏ': ['و', 'ؤ', 'وْ', 'وُ'],
+    'ۏ': ['ۇ', 'و', 'ؤ', 'وْ', 'وُ'], // Included 'ۇ' as requested!
     'ی': ['ݔ', 'ے', 'یْ', 'یٰ', 'ئ'],
     'ن': ['ں', 'نٚ'],
     'ر': ['ڑ'],

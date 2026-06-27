@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart'; // Fixed import typo (.dart added!)
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart'; // Loads Amiri font automatically
-import 'package:shared_preferences/shared_preferences.dart'; // Persists custom colors
 import 'balochi_keyboard_config.dart';
 
 void main() {
@@ -99,6 +97,7 @@ class _LekpadAppState extends State<LekpadApp> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Unified local Amiri font styling for the entire App Theme
     final darkTheme = ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFFD97706), // Glowing Amber/Gold

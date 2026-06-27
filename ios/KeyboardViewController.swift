@@ -89,7 +89,6 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func updateTheme() {
-        // Read customization colors from Shared App Group UserDefaults!
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
             if let bgHex = defaults.string(forKey: "flutter.kb_bg_color_hex") {
                 self.view.backgroundColor = UIColor(hex: bgHex)
@@ -152,22 +151,20 @@ class KeyboardViewController: UIInputViewController {
             view.removeFromSuperview()
         }
 
-        // Exact layout matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji "؟۱۲۳", and "ھ" instead of "هـ")
         let keys: [[String]] = isBalorabi ? [
             ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
             ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
             ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
             ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"],
-            ["؟۱۲۳", "🌐", " ", "۔", "⏎"]
+            ["؟۱۲۳", "🌐", " ", "۔", "مان"]
         ] : [
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
             ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
             ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
             ["⬆", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"],
-            ["?123", "🌐", " ", ".", "⏎"]
+            ["?123", "🌐", " ", ".", "Màn"]
         ]
 
-        // Fetch custom colors from UserDefaults
         var customKeyBg = UIColor.systemBackground
         var customTextColor = UIColor.label
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
@@ -185,7 +182,6 @@ class KeyboardViewController: UIInputViewController {
             rowStack.distribution = .fillEqually
             rowStack.spacing = 5
             
-            // Force Right-to-Left alignment dynamically for Arabic-Balorabi script layout!
             if isBalorabi {
                 rowStack.semanticContentAttribute = .forceRightToLeft
             } else {
@@ -195,16 +191,25 @@ class KeyboardViewController: UIInputViewController {
             for key in row {
                 let button = UIButton(type: .system)
                 
-                // Capitalization/Shift rendering logic for letters
                 var keyTitle = key
                 if !isBalorabi && !isShiftActive && key.count == 1 {
                     keyTitle = key.lowercased()
                 }
                 
                 button.setTitle(keyTitle == " " ? "␣" : keyTitle, for: .normal) 
+                
+                // 1. HIGH-AESTHETIC SYNC: Custom identical corner radius, borders and fonts!
                 button.backgroundColor = customKeyBg
-                button.layer.cornerRadius = 5
+                button.layer.cornerRadius = 8 // Matches premium rounded look!
+                button.layer.masksToBounds = true
                 button.setTitleColor(customTextColor, for: .normal)
+                
+                // Load local Amiri font!
+                if let amiriFont = UIFont(name: "Amiri", size: 18) {
+                    button.titleLabel?.font = amiriFont
+                } else {
+                    button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+                }
                 
                 button.addTarget(self, action: #selector(keyTapped(_:)), for: .touchUpInside)
 
@@ -236,7 +241,7 @@ class KeyboardViewController: UIInputViewController {
         case "⌫":
             proxy.deleteBackward()
             updatePredictions("")
-        case "⏎":
+        case "⏎", "مان", "Màn":
             proxy.insertText("\n")
             updatePredictions("")
         case "🌐":
@@ -246,16 +251,19 @@ class KeyboardViewController: UIInputViewController {
             isShiftActive = !isShiftActive
             renderKeys()
         case "؟۱۲۳", "?123":
-            // Symbol toggles can be mapped
             break
         default:
-            // Dynamic Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
-            if let preceding = proxy.documentContextBeforeInput?.last, String(preceding) == "ے", !key.isEmpty, !isPunctuation(key) {
+            var typedKey = key
+            if !isBalorabi && !isShiftActive && key.count == 1 {
+                typedKey = key.lowercased()
+            }
+            
+            if let preceding = proxy.documentContextBeforeInput?.last, String(preceding) == "ے", !typedKey.isEmpty, !isPunctuation(typedKey) {
                 proxy.deleteBackward()
                 proxy.insertText("ݔ")
             }
             
-            proxy.insertText(key)
+            proxy.insertText(typedKey)
             let documentContext = proxy.documentContextBeforeInput ?? ""
             let currentWord = documentContext.components(separatedBy: " ").last ?? ""
             updatePredictions(currentWord)
@@ -298,6 +306,9 @@ class KeyboardViewController: UIInputViewController {
         for word in matches {
             let button = UIButton(type: .system)
             button.setTitle(word, for: .normal)
+            if let amiriFont = UIFont(name: "Amiri", size: 16) {
+                button.titleLabel?.font = amiriFont
+            }
             button.addTarget(self, action: #selector(predictionSelected(_:)), for: .touchUpInside)
             predictionBar.addArrangedSubview(button)
         }
@@ -344,10 +355,9 @@ extension UIColor {
             self.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
             return
         }
-        // Handle 8-digit hex (ARGB) from Flutter
         if (cString.count == 8) {
             cString.remove(at: cString.startIndex)
-            cString.remove(at: cString.startIndex) // Skip alpha channel prefix for standard UIColor
+            cString.remove(at: cString.startIndex) 
         }
         var rgbValue: UInt64 = 0
         Scanner(string: cString).scanHexInt64(&rgbValue)
@@ -359,3 +369,4 @@ extension UIColor {
         )
     }
 }
+export template KeyboardViewController;

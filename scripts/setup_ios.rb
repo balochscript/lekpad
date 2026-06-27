@@ -75,13 +75,11 @@ extension_target = project.new_target(:app_extension, extension_name, :ios, '13.
 extension_target.product_type = 'com.apple.product-type.app-extension'
 
 # 6. Create file references in Xcode
-# Crucial: Since the group is created inside 'main_group' with path 'LekpadExtension',
-# adding a file using just the local filename (e.g. "KeyboardViewController.swift")
-# instructs Xcode to correctly resolve the path as "LekpadExtension/KeyboardViewController.swift"
-# relative to the project root directory (which is 'ios/').
 group = main_group.find_subpath(extension_name, true)
-swift_file_ref = group.new_file("KeyboardViewController.swift") # FIXED: Passed only the local filename
-plist_file_ref = group.new_file("Info.plist") # FIXED: Passed only the local filename
+group.path = extension_name # CRUCIAL: Map the Xcode group to its physical folder on disk (relative to project root 'ios/')
+
+swift_file_ref = group.new_file("KeyboardViewController.swift") # File path inside the group folder
+plist_file_ref = group.new_file("Info.plist") # File path inside the group folder
 
 # 7. Add Swift file to compilation sources
 extension_target.add_file_references([swift_file_ref])

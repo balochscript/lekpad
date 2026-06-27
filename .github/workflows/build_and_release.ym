@@ -62,9 +62,10 @@ jobs:
           cp -r temp_custom/images/* images/
           cp temp_custom/pubspec.yaml .
           
-          # Move Android custom Kotlin file and XML resources to the correct package path: bc/lekpad/balochi
+          # Move Android custom Kotlin files and XML resources to the correct package path: bc/lekpad/balochi
           mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
           cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/
+          cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/
           
           mkdir -p android/app/src/main/res/xml
           mkdir -p android/app/src/main/res/layout
@@ -158,7 +159,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 5: Build iOS app bundle (unsigned for CI/CD)
+      # Step 5: Build iOS app bundle (unsigned for CI/CD - pod install is invoked automatically here)
       - name: Build iOS (No Codesign)
         run: flutter build ios --release --no-codesign
 

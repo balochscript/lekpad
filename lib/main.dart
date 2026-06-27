@@ -721,7 +721,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     final hintColor = isDark ? const Color(0xFFFCA5A5) : crimsonThread;
 
     final hint = BalochiConfig.keyVisualAlternativeHints[key];
-    bool isSpecial = key == ' ' || key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC';
+    bool isSpecial = key == ' ' || key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC' || key == '⌫' || key == '⏎';
 
     Color finalBg = keyBg;
     Widget keyLabel;
@@ -736,23 +736,17 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           borderRadius: BorderRadius.circular(2),
         ),
       );
-    } else if (key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
+    } else if (key == '⌫' || key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
       finalBg = isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
       keyLabel = Text(
-        (key == 'پاکے' || key == 'BACKSPACE') ? '◀پاکے' : '< Pàk',
-        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: crimsonThread, fontSize: 16),
+        '⌫', // Replaced text completely with clean minimal Backspace icon!
+        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: crimsonThread, fontSize: 18),
       );
-    } else if (key == 'مان' || key == 'Màn') {
+    } else if (key == '⏎' || key == 'مان' || key == 'Màn') {
       finalBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
-      keyLabel = Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            key,
-            style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16),
-          ),
-          const Icon(Icons.keyboard_return, color: Colors.green, size: 14)
-        ],
+      keyLabel = Text(
+        '⏎', // Replaced text completely with clean minimal Return/Enter icon!
+        style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 18),
       );
     } else if (key == '؟۱۲۳' || key == '?123') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
@@ -785,9 +779,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       onTap: () {
         if (key == ' ' || key == 'SPACE') {
           _insertText(' ');
-        } else if (key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
+        } else if (key == '⌫' || key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
           _backspace();
-        } else if (key == 'مان' || key == 'Màn') {
+        } else if (key == '⏎' || key == 'مان' || key == 'Màn') {
           _insertText('\n');
         } else if (key == '⬆') {
           // Toggle Shift state

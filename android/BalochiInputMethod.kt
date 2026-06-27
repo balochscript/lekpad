@@ -13,11 +13,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import com.example.lekpad.R // Unused standard placeholder import
-import bc.example.lekpad.R // Generic placeholder
-import com.example.lekpad_scaffold.R // Alternative placeholder
-import com.example.lekpad.BalochiInputMethod // Reference
-import bc.lekpad.balochi.R // This is the EXACT compiled package resource R class!
+import bc.lekpad.balochi.R // The single, exact compiled package resource R class
 
 class BalochiInputMethod : InputMethodService() {
 
@@ -44,7 +40,7 @@ class BalochiInputMethod : InputMethodService() {
     )
 
     private val balotinVocab = listOf(
-        "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj",
+        "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Diwàl", "Dràj",
         "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik",
         "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag",
         "Ustum", "Ustàz", "Òlàk", "Òšt", "Pattar", "Pit", "Poll", "Rung", "Ràhšòn", "Siyàh",
@@ -121,7 +117,7 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
                 listOf("ے", "ی", "ڈ", "ٹ", "و", "ء", "هـ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
-                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"),
+                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاک"),
                 listOf("ツ", "ABC", "SPACE", "-", "مان")
             )
         } else {
@@ -168,7 +164,7 @@ class BalochiInputMethod : InputMethodService() {
                 ic.commitText(" ", 1)
                 updateWordPredictions("")
             }
-            "پاکے", "Pàk" -> {
+            "پاک", "Pàk" -> {
                 ic.deleteSurroundingText(1, 0)
                 updateWordPredictions("")
             }

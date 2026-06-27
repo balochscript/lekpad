@@ -48,6 +48,9 @@ jobs:
           mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
+          # Delete the now empty folders to prevent nested merging (e.g. android/android, ios/ios)
+          rm -rf android ios lib scripts images
+          
           # Scaffold the Flutter project specifying package name: bc.lekpad.balochi
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
@@ -57,12 +60,13 @@ jobs:
           rm -rf lekpad_scaffold
           
           # Restore our custom files back over the scaffolded template
+          mkdir -p lib scripts images
           cp -r temp_custom/lib/* lib/
           cp -r temp_custom/scripts/* scripts/
           cp -r temp_custom/images/* images/
           cp temp_custom/pubspec.yaml .
           
-          # Move Android custom Kotlin files and XML resources to the correct package path: bc/lekpad/balochi
+          # Move Android custom Kotlin file and XML resources to the correct package path: bc/lekpad/balochi
           mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
           cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/
           cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/
@@ -94,13 +98,13 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lekpad-android-apk
+          name: Lekpad-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lekpad-android-aab
+          name: Lekpad-android-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
 
@@ -132,6 +136,9 @@ jobs:
           mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
+          # Delete empty custom folders to prevent double nested merging on macOS runner
+          rm -rf android ios lib scripts images
+          
           # Force package name: bc.lekpad.balochi on iOS too
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
@@ -139,6 +146,7 @@ jobs:
           mv lekpad_scaffold/.[!.]* . || true
           rm -rf lekpad_scaffold
           
+          mkdir -p lib scripts images
           cp -r temp_custom/lib/* lib/
           cp -r temp_custom/scripts/* scripts/
           cp -r temp_custom/images/* images/
@@ -159,7 +167,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 5: Build iOS app bundle (unsigned for CI/CD - pod install is invoked automatically here)
+      # Step 5: Build iOS app bundle (unsigned for CI/CD)
       - name: Build iOS (No Codesign)
         run: flutter build ios --release --no-codesign
 
@@ -167,5 +175,5 @@ jobs:
       - name: Upload iOS App Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lekpad-ios-app
+          name: Lekpad-ios-app
           path: build/ios/iphoneos/Runner.app

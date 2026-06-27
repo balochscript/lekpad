@@ -94,22 +94,22 @@ class BalochiConfig {
     'Jòďènag', 'Jòďènòk', 'Banènag', 'Banènòk', 'Banèntagèn', 'Aď', 'Šarr', 'Šauk', 'Zabardast'
   ];
 
-  // 3. Precise Balòrabi Layout Definition (With "مان" as Enter key)
+  // 3. Precise Balòrabi Layout Definition (Matching bottom keyboard in image, with "ۏ" in Row 1!)
   static const List<List<String>> balorabiLayout = [
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], // Row 0: Numbers
-    ['ے', 'ی', 'ڈ', 'ٹ', 'و', 'ء', 'هـ', 'ج', 'چ', 'ءِ'], // Row 1: Vowels and some consonants
+    ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'هـ', 'ج', 'چ', 'ءِ'], // Row 1: Fixed: replaced 'و' with 'ۏ' as requested!
     ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], // Row 2: Standard consonants
     ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', 'پاکے'], // Row 3: Command & Consonants
-    ['ツ', 'ABC', 'SPACE', '-', 'مان'] // Row 4: Action bar (Màn as Enter!)
+    ['؟۱۲۳', 'ABC', 'SPACE', '-', 'مان'] // Row 4: Action bar (Màn as Enter, Non-emoji Symbol toggle)
   ];
 
-  // 4. Precise Balòtin Layout Definition (With "Màn" as Enter key)
+  // 4. Precise Balòtin Layout Definition
   static const List<List<String>> balotinLayout = [
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], // Row 0: Numbers
     ['À', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'], // Row 1
     ['A', 'Š', 'S', 'D', 'Ď', 'G', 'H', 'J', 'K', 'L', 'Ò'], // Row 2
     ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', 'Pàk'], // Row 3
-    ['ツ Sym', 'اب ...', 'SPACE', '.', 'Màn'] // Row 4 (Màn as Enter!)
+    ['?123', 'اب ...', 'SPACE', '.', 'Màn'] // Row 4 (Màn as Enter!)
   ];
 
   // 5. Symbols Page 1 Layout
@@ -130,7 +130,9 @@ class BalochiConfig {
     ['اب/ABC', 'SPACE', 'مان']
   ];
 
-  // 7. High-fidelity Long Press & Alternative Letters Mappings
+  // 7. Refined High-fidelity Long Press & Alternative Letters Mappings
+  // Removed redundant alternates like Ó/È on E/O since they are on the main face.
+  // Mapped less common standard Balòtin letters F, V, X, Q, Ĝ, Ř as long-press options!
   static const Map<String, String> keyVisualAlternativeHints = {
     // Balorabi
     'پ': 'ف',
@@ -142,7 +144,7 @@ class BalochiConfig {
     'ی': 'ئ',
     'ڈ': 'ذ',
     'ٹ': 'ط',
-    'و': 'ۏ',
+    'ۏ': 'و',
     'ء': 'ع',
     'هـ': 'ح',
     'ج': 'ح',
@@ -153,17 +155,17 @@ class BalochiConfig {
     'د': 'ذ',
     'ک': 'ق',
     'گ': 'غ',
-    // Balotin
-    'S': 'Š',
-    'D': 'Ď',
+    // Balotin (No redundant hints, now shows less common standard letters)
+    'P': 'F',
+    'W': 'V',
+    'K': 'X',
     'G': 'Ĝ',
-    'O': 'Ò',
-    'Z': 'Ž',
-    'E': 'È',
+    'R': 'Ř',
   };
 
-  // Full lists of alternatives for popups
+  // Full lists of alternatives for popups (Completely cleared of redundant main-key letters!)
   static const Map<String, List<String>> keyAlternativeSelections = {
+    // Balorabi
     'ت': ['ث', 'ط'],
     'ج': ['ح'],
     'چ': ['خ'],
@@ -177,16 +179,22 @@ class BalochiConfig {
     'هـ': ['ح', 'ھ', 'ه'],
     'ء': ['ع', 'ءَ', 'ءِ', 'ءُ'],
     'و': ['ۏ', 'ؤ', 'وْ', 'وُ'],
+    'ۏ': ['و', 'ؤ', 'وْ', 'وُ'],
     'ی': ['ݔ', 'ے', 'یْ', 'یٰ', 'ئ'],
     'ن': ['ں', 'نٚ'],
     'ر': ['ڑ'],
     'ژ': ['ظ'],
     
-    'S': ['Š'],
-    'D': ['Ď'],
+    // Balotin (Non-redundant: F, V, X, Q, Ĝ, Ř mapped correctly under closest phonetic keys)
+    'P': ['F'],
+    'W': ['V'],
+    'K': ['Q', 'X'],
     'G': ['Ĝ'],
-    'O': ['Ò', 'Ó'],
-    'Z': ['Ž'],
-    'E': ['È', 'É'],
+    'R': ['Ř'],
+    'O': ['Ó', 'Ô'],
+    'E': ['É', 'Ê'],
+    'A': ['Á', 'Â'],
+    'I': ['Í', 'Î'],
+    'U': ['Ú', 'Û'],
   };
 }

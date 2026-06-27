@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart'; // Fixed import typo (.dart added!)
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart'; // Loads Amiri font automatically
-import 'package:shared_preferences/shared_preferences.dart'; // Persists custom colors for Android/iOS
+import 'package:shared_preferences/shared_preferences.dart'; // Persists custom colors
 import 'balochi_keyboard_config.dart';
 
 void main() {
@@ -220,11 +220,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   bool _isPunctuation(String char) {
-    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '='];
+    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '=', '۔', 'ـ'];
     return punc.contains(char);
   }
 
-  // Automatic Ligature Joining: convert 'ے' to 'ݔ' if followed immediately by a letter
+  // Automatic Contextual Ligature joining for 'ے' and 'ݔ'
   void _insertText(String chars) {
     final text = _textController.text;
     final selection = _textController.selection;
@@ -327,7 +327,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Unified Luxury App Header
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -402,7 +401,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Quick Settings (Redankan) with active OS links!
                     Text(
                       _getLocalizedText('settings'),
                       style: GoogleFonts.amiri(
@@ -417,18 +415,17 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                       icon: Icons.keyboard_capslock,
                       title: _getLocalizedText('enable_keyboard'),
                       accentGold: accentGold,
-                      onTap: _enableKeyboard, // Actively opens OS settings
+                      onTap: _enableKeyboard,
                     ),
                     _buildSettingButton(
                       context,
                       icon: Icons.touch_app_outlined,
                       title: _getLocalizedText('choose_keyboard'),
                       accentGold: accentGold,
-                      onTap: _chooseKeyboard, // Actively triggers OS input picker
+                      onTap: _chooseKeyboard,
                     ),
                     
                     const SizedBox(height: 16),
-                    // Themes (Rangbandi) & Custom Colors Panel!
                     Text(
                       _getLocalizedText('themes'),
                       style: GoogleFonts.amiri(
@@ -469,7 +466,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                             ),
                           ),
                           const Divider(height: 1),
-                          // Custom Colors Customization Suite (Bg, Key, Text)
                           Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Column(
@@ -501,7 +497,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     ),
 
                     const SizedBox(height: 16),
-                    // Typing test
                     Text(
                       _getLocalizedText('test_typing'),
                       style: GoogleFonts.amiri(
@@ -592,7 +587,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   Widget _buildKeyboardUI(bool isDark, Color accentGold, Color crimsonThread) {
-    // Dynamic color matches customized values chosen by the user!
     final keyboardBg = widget.kbBgColor;
     
     List<List<String>> layout;
@@ -700,22 +694,22 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   Widget _buildKeyWidget(String key, bool isDark, Color accentGold, Color crimsonThread) {
-    // Normal key customizable colors
     final keyBg = widget.keyBgColor;
     final textColor = widget.keyTextColor;
     final hintColor = isDark ? const Color(0xFFFCA5A5) : crimsonThread;
 
     final hint = BalochiConfig.keyVisualAlternativeHints[key];
-    bool isSpecial = key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123';
+    bool isSpecial = key == ' ' || key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC';
 
     Color finalBg = keyBg;
     Widget keyLabel;
 
-    if (key == 'SPACE') {
+    // Minimal Spacebar render matching standard style!
+    if (key == ' ' || key == 'SPACE') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
       keyLabel = Container(
         height: 12,
-        width: 60,
+        width: 140, // Elegant wide spacebar!
         decoration: BoxDecoration(
           color: isDark ? accentGold.withOpacity(0.5) : accentGold,
           borderRadius: BorderRadius.circular(2),
@@ -745,10 +739,13 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         key,
         style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: accentGold, fontSize: 16),
       );
-    } else if (key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀') {
+    } else if (key == '🌐') {
+      finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+      keyLabel = Icon(Icons.language, color: accentGold, size: 20); // Minimal global icon instead of text
+    } else if (key == '← 1/2' || key == '2/2 →' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀') {
       finalBg = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
       keyLabel = Text(
-        key,
+        key.replaceAll('صفحہ ۱ ◀', '← 1/2').replaceAll('صفحہ ۲ ◀', '2/2 →'),
         style: GoogleFonts.amiri(fontWeight: FontWeight.bold, color: textColor, fontSize: 13),
       );
     } else {
@@ -760,7 +757,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
 
     return GestureDetector(
       onTap: () {
-        if (key == 'SPACE') {
+        if (key == ' ' || key == 'SPACE') {
           _insertText(' ');
         } else if (key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
           _backspace();
@@ -770,11 +767,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           widget.onModeChanged('balotin');
         } else if (key == 'اب ...') {
           widget.onModeChanged('balorabi');
+        } else if (key == '🌐') {
+          // Quick globe switch
+          widget.onModeChanged(widget.previousScript == 'balorabi' ? 'balotin' : 'balorabi');
         } else if (key == '؟۱۲۳' || key == '?123') {
           widget.onModeChanged('symbols1'); 
-        } else if (key == 'صفحہ ۲ ◀') {
+        } else if (key == '2/2 →' || key == 'صفحہ ۲ ◀') {
           widget.onModeChanged('symbols2'); 
-        } else if (key == 'صفحہ ۱ ◀') {
+        } else if (key == '← 1/2' || key == 'صفحہ ۱ ◀') {
           widget.onModeChanged('symbols1'); 
         } else if (key == 'اب/ABC') {
           widget.onModeChanged(widget.previousScript); 

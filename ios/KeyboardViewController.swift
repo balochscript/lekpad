@@ -7,6 +7,12 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardButton: UIButton!
     private var mainKeyboardStack: UIStackView!
 
+    // Custom coloring configuration (Synced from Flutter App Group)
+    private var kbBgColor: UIColor = UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0)
+    private var keyBgColor: UIColor = .systemBackground
+    private var keyTextColor: UIColor = .label
+    private var isShiftActive: Bool = false
+
     // Comprehensive standard dictionary strictly filtered (no ظطضصثقفغعخ)
     private val balorabiVocab = [
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
@@ -49,7 +55,7 @@ class KeyboardViewController: UIInputViewController {
         "گ": ["غ"],
         "پ": ["ف"],
         "ک": ["ق"],
-        "ھ": ["ہ", "هـ", "ح", "ه"], // Included Choti He 'ہ' under Do-Chashmi He 'ھ'
+        "ھ": ["ہ", "هـ", "ح", "ه"], 
         "ء": ["ع", "ءَ", "ءِ", "ءُ"],
         "و": ["ۏ", "ؤ", "وْ", "وُ"],
         "ۏ": ["و", "ؤ", "وْ", "وُ"],
@@ -57,16 +63,16 @@ class KeyboardViewController: UIInputViewController {
         "ن": ["ں", "نٚ"],
         "ر": ["ڑ"],
         "ژ": ["ظ"],
-        "۔": ["ـ", "—", "-"], // Tatweel/Kashida 'ـ' mapped under Balochi full-stop '۔'
+        "۔": ["ـ", "—", "-"], 
         "a": ["á", "à", "æ"],
         "d": ["ď"],
-        "g": ["ĝ"],
-        "i": ["í", "ì"],
-        "r": ["ř"],
-        "s": ["š"],
-        "t": ["ť"],
-        "u": ["ú", "ù"],
-        "z": ["ž"]
+        "g" to ["ĝ"],
+        "i" to ["í", "ì"],
+        "r" to ["ř"],
+        "s" to ["š"],
+        "t" to ["ť"],
+        "u" to ["ú", "ù"],
+        "z" to ["ž"]
     ]
 
     override func viewDidLoad() {
@@ -85,7 +91,7 @@ class KeyboardViewController: UIInputViewController {
     private func updateTheme() {
         // Read customization colors from Shared App Group UserDefaults!
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
-            if let bgHex = defaults.string(forKey: "kbBgColor") {
+            if let bgHex = defaults.string(forKey: "flutter.kb_bg_color_hex") {
                 self.view.backgroundColor = UIColor(hex: bgHex)
             } else {
                 let isDark = self.traitCollection.userInterfaceStyle == .dark
@@ -151,24 +157,24 @@ class KeyboardViewController: UIInputViewController {
             ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
             ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
             ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
-            ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"],
-            ["؟۱۲۳", "🌐", " ", "۔", "مان"]
+            ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"],
+            ["؟۱۲۳", "🌐", " ", "۔", "⏎"]
         ] : [
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
             ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
             ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
-            ["⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"],
-            ["?123", "🌐", " ", ".", "Màn"]
+            ["⬆", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"],
+            ["?123", "🌐", " ", ".", "⏎"]
         ]
 
         // Fetch custom colors from UserDefaults
         var customKeyBg = UIColor.systemBackground
         var customTextColor = UIColor.label
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
-            if let keyBgHex = defaults.string(forKey: "keyBgColor") {
+            if let keyBgHex = defaults.string(forKey: "flutter.key_bg_color_hex") {
                 customKeyBg = UIColor(hex: keyBgHex)
             }
-            if let keyTextHex = defaults.string(forKey: "keyTextColor") {
+            if let keyTextHex = defaults.string(forKey: "flutter.key_text_color_hex") {
                 customTextColor = UIColor(hex: keyTextHex)
             }
         }
@@ -178,10 +184,24 @@ class KeyboardViewController: UIInputViewController {
             rowStack.axis = .horizontal
             rowStack.distribution = .fillEqually
             rowStack.spacing = 5
+            
+            // Force Right-to-Left alignment dynamically for Arabic-Balorabi script layout!
+            if isBalorabi {
+                rowStack.semanticContentAttribute = .forceRightToLeft
+            } else {
+                rowStack.semanticContentAttribute = .forceLeftToRight
+            }
 
             for key in row {
                 let button = UIButton(type: .system)
-                button.setTitle(key == " " ? "␣" : key, for: .normal) // Minimal space indicator
+                
+                // Capitalization/Shift rendering logic for letters
+                var keyTitle = key
+                if !isBalorabi && !isShiftActive && key.count == 1 {
+                    keyTitle = key.lowercased()
+                }
+                
+                button.setTitle(keyTitle == " " ? "␣" : keyTitle, for: .normal) 
                 button.backgroundColor = customKeyBg
                 button.layer.cornerRadius = 5
                 button.setTitleColor(customTextColor, for: .normal)
@@ -213,17 +233,20 @@ class KeyboardViewController: UIInputViewController {
         case "SPACE", " ":
             proxy.insertText(" ")
             updatePredictions("")
-        case "پاکے", "Pàk":
+        case "⌫":
             proxy.deleteBackward()
             updatePredictions("")
-        case "مان", "Màn":
+        case "⏎":
             proxy.insertText("\n")
             updatePredictions("")
         case "🌐":
             isBalorabi = !isBalorabi
             renderKeys()
+        case "⬆":
+            isShiftActive = !isShiftActive
+            renderKeys()
         case "؟۱۲۳", "?123":
-            // Can trigger symbols layout
+            // Symbol toggles can be mapped
             break
         default:
             // Dynamic Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
@@ -317,9 +340,14 @@ extension UIColor {
         if (cString.hasPrefix("#")) {
             cString.remove(at: cString.startIndex)
         }
-        if ((cString.count) != 6) {
+        if ((cString.count) != 8 && (cString.count) != 6) {
             self.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
             return
+        }
+        // Handle 8-digit hex (ARGB) from Flutter
+        if (cString.count == 8) {
+            cString.remove(at: cString.startIndex)
+            cString.remove(at: cString.startIndex) // Skip alpha channel prefix for standard UIColor
         }
         var rgbValue: UInt64 = 0
         Scanner(string: cString).scanHexInt64(&rgbValue)
@@ -331,4 +359,3 @@ extension UIColor {
         )
     }
 }
-export template KeyboardViewController;

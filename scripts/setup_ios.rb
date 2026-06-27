@@ -75,17 +75,21 @@ extension_target = project.new_target(:app_extension, extension_name, :ios, '13.
 extension_target.product_type = 'com.apple.product-type.app-extension'
 
 # 6. Create file references in Xcode
+# Crucial: Since the group is created inside 'main_group' with path 'LekpadExtension',
+# adding a file using just the local filename (e.g. "KeyboardViewController.swift")
+# instructs Xcode to correctly resolve the path as "LekpadExtension/KeyboardViewController.swift"
+# relative to the project root directory (which is 'ios/').
 group = main_group.find_subpath(extension_name, true)
-swift_file_ref = group.new_file("#{extension_dir}/KeyboardViewController.swift")
-plist_file_ref = group.new_file("#{extension_dir}/Info.plist")
+swift_file_ref = group.new_file("KeyboardViewController.swift") # FIXED: Passed only the local filename
+plist_file_ref = group.new_file("Info.plist") # FIXED: Passed only the local filename
 
 # 7. Add Swift file to compilation sources
 extension_target.add_file_references([swift_file_ref])
 
 # 8. Configure build settings for the Extension Target (Fixed path relative to Xcode's ios/ root directory)
 extension_target.build_configurations.each do |config|
-  config.build_settings['INFOPLIST_FILE'] = "#{extension_name}/Info.plist" # FIXED: Relative to Xcode root directory (removes double 'ios/')
-  config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "bc.lekpad.balochi.#{extension_name}" # UPDATED: Synced package name
+  config.build_settings['INFOPLIST_FILE'] = "#{extension_name}/Info.plist" # FIXED: Relative to Xcode root directory
+  config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "bc.lekpad.balochi.#{extension_name}" # Synced package name
   config.build_settings['PRODUCT_NAME'] = '$(TARGET_NAME)'
   config.build_settings['SKIP_INSTALL'] = 'YES'
   config.build_settings['SWIFT_VERSION'] = '5.0'
@@ -107,4 +111,4 @@ end
 
 # 10. Save Xcode project changes
 project.save
-puts "Successfully configured iOS App Extension for Lekpad!"
+puts "Successfully configured iOS App Extension for Lekpad with standard pathings!"

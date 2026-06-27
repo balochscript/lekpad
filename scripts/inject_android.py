@@ -16,6 +16,10 @@ if application is None:
     print("Application tag not found in Manifest!")
     exit(1)
 
+# FORCE the user-facing App Launcher name to be "Lekpad" instead of "balochi"
+application.set('{http://schemas.android.com/apk/res/android}label', 'Lekpad')
+print("Successfully forced Android Launcher app name to 'Lekpad'!")
+
 # Check if service already exists to prevent duplicate insertion
 service_exists = False
 for child in application.findall('service'):
@@ -44,4 +48,5 @@ if not service_exists:
     tree.write(manifest_path, encoding='utf-8', xml_declaration=True)
     print("Successfully injected BalochiInputMethod service into AndroidManifest.xml!")
 else:
-    print("Service already exists in AndroidManifest.xml, skipping.")
+    tree.write(manifest_path, encoding='utf-8', xml_declaration=True)
+    print("Service already exists, saving and exiting.")

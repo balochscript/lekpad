@@ -7,11 +7,6 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardButton: UIButton!
     private var mainKeyboardStack: UIStackView!
 
-    // Custom coloring configuration (Synced from Flutter App Group)
-    private var kbBgColor: UIColor = UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0)
-    private var keyBgColor: UIColor = .systemBackground
-    private var keyTextColor: UIColor = .label
-
     // Comprehensive standard dictionary strictly filtered (no ظطضصثقفغعخ)
     private val balorabiVocab = [
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
@@ -54,22 +49,24 @@ class KeyboardViewController: UIInputViewController {
         "گ": ["غ"],
         "پ": ["ف"],
         "ک": ["ق"],
-        "هـ": ["ھ", "ح", "ه"],
+        "ھ": ["ہ", "هـ", "ح", "ه"], // Included Choti He 'ہ' under Do-Chashmi He 'ھ'
         "ء": ["ع", "ءَ", "ءِ", "ءُ"],
         "و": ["ۏ", "ؤ", "وْ", "وُ"],
+        "ۏ": ["و", "ؤ", "وْ", "وُ"],
         "ی": ["ݔ", "ے", "یْ", "یٰ", "ئ"],
         "ن": ["ں", "نٚ"],
         "ر": ["ڑ"],
         "ژ": ["ظ"],
+        "۔": ["ـ", "—", "-"], // Tatweel/Kashida 'ـ' mapped under Balochi full-stop '۔'
         "a": ["á", "à", "æ"],
-        "d" to ["ď"],
-        "g" to ["ĝ"],
-        "i" to ["í", "ì"],
-        "r" to ["ř"],
-        "s" to ["š"],
-        "t" to ["ť"],
-        "u" to ["ú", "ù"],
-        "z" to ["ž"]
+        "d": ["ď"],
+        "g": ["ĝ"],
+        "i": ["í", "ì"],
+        "r": ["ř"],
+        "s": ["š"],
+        "t": ["ť"],
+        "u": ["ú", "ù"],
+        "z": ["ž"]
     ]
 
     override func viewDidLoad() {
@@ -89,7 +86,7 @@ class KeyboardViewController: UIInputViewController {
         // Read customization colors from Shared App Group UserDefaults!
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
             if let bgHex = defaults.string(forKey: "kbBgColor") {
-                self.view.backgroundColor = UIColor(hex: bgBgColorHex)
+                self.view.backgroundColor = UIColor(hex: bgHex)
             } else {
                 let isDark = self.traitCollection.userInterfaceStyle == .dark
                 self.view.backgroundColor = isDark ? UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0) : UIColor(red: 0.92, green: 0.93, blue: 0.95, alpha: 1.0)
@@ -149,19 +146,19 @@ class KeyboardViewController: UIInputViewController {
             view.removeFromSuperview()
         }
 
-        // Exact layout matching IMG_20260626_214608.png (with "ۏ" in row 1, no emojis!)
+        // Exact layout matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji "؟۱۲۳", and "ھ" instead of "هـ")
         let keys: [[String]] = isBalorabi ? [
             ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
-            ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "هـ", "ج", "چ", "ءِ"],
+            ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
             ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
             ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"],
-            ["؟۱۲۳", "ABC", "SPACE", "-", "مان"]
+            ["؟۱۲۳", "🌐", " ", "۔", "مان"]
         ] : [
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
             ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
             ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
             ["⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"],
-            ["?123", "اب ...", "SPACE", ".", "Màn"]
+            ["?123", "🌐", " ", ".", "Màn"]
         ]
 
         // Fetch custom colors from UserDefaults
@@ -184,7 +181,7 @@ class KeyboardViewController: UIInputViewController {
 
             for key in row {
                 let button = UIButton(type: .system)
-                button.setTitle(key, for: .normal)
+                button.setTitle(key == " " ? "␣" : key, for: .normal) // Minimal space indicator
                 button.backgroundColor = customKeyBg
                 button.layer.cornerRadius = 5
                 button.setTitleColor(customTextColor, for: .normal)
@@ -201,19 +198,19 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func isPunctuation(_ char: String) -> Bool {
-        let punc = [" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "="]
+        let punc = [" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=", "۔", "ـ"]
         return punc.contains(char)
     }
 
     @objc private func keyTapped(_ sender: UIButton) {
         guard let key = sender.titleLabel?.text else { return }
-        handleKeyPress(key)
+        handleKeyPress(key == "␣" ? " " : key)
     }
 
     private func handleKeyPress(_ key: String) {
         let proxy = self.textDocumentProxy as UITextDocumentProxy
         switch key {
-        case "SPACE":
+        case "SPACE", " ":
             proxy.insertText(" ")
             updatePredictions("")
         case "پاکے", "Pàk":
@@ -222,12 +219,12 @@ class KeyboardViewController: UIInputViewController {
         case "مان", "Màn":
             proxy.insertText("\n")
             updatePredictions("")
-        case "ABC":
-            isBalorabi = false
+        case "🌐":
+            isBalorabi = !isBalorabi
             renderKeys()
-        case "اب ...":
-            isBalorabi = true
-            renderKeys()
+        case "؟۱۲۳", "?123":
+            // Can trigger symbols layout
+            break
         default:
             // Dynamic Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
             if let preceding = proxy.documentContextBeforeInput?.last, String(preceding) == "ے", !key.isEmpty, !isPunctuation(key) {
@@ -246,7 +243,7 @@ class KeyboardViewController: UIInputViewController {
         guard gesture.state == .began,
               let button = gesture.view as? UIButton,
               let key = button.titleLabel?.text,
-              let alternatives = longPressMappings[key] else { return }
+              let alternatives = longPressMappings[key == "␣" ? " " : key] else { return }
 
         let alert = UIAlertController(title: "Variations", message: nil, preferredStyle: .actionSheet)
         
@@ -316,7 +313,7 @@ class KeyboardViewController: UIInputViewController {
 // Swift helper extension for hex string to UIColor parsing
 extension UIColor {
     convenience init(hex: String) {
-        var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercaseString
+        var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         if (cString.hasPrefix("#")) {
             cString.remove(at: cString.startIndex)
         }
@@ -334,3 +331,4 @@ extension UIColor {
         )
     }
 }
+export template KeyboardViewController;

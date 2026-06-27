@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart'; // Fixed import typo (.dart added!)
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart'; // Loads Amiri font automatically
+import 'package:shared_preferences/shared_preferences.dart'; // Persists custom colors for Android/iOS
 import 'balochi_keyboard_config.dart';
 
 void main() {
@@ -16,14 +17,47 @@ class LekpadApp extends StatefulWidget {
 
 class _LekpadAppState extends State<LekpadApp> {
   // Option 2 Theme matches: Slate/Charcoal background, Glowing Gold/Amber accents, Crimson Thread red highlights
-  ThemeMode _themeMode = ThemeMode.dark; // Defaults to Dark to match the luxury dark grey leather icon
+  ThemeMode _themeMode = ThemeMode.dark; 
   String _keyboardMode = 'balorabi'; 
   String _previousScript = 'balorabi'; 
 
-  void _toggleTheme(bool isDark) {
+  // Customizable Custom colors
+  Color _kbBgColor = const Color(0xFF0F172A);
+  Color _keyBgColor = const Color(0xFF1E293B);
+  Color _keyTextColor = Colors.white;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomColors();
+  }
+
+  void _loadCustomColors() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _kbBgColor = Color(prefs.getInt('kb_bg_color') ?? 0xFF0F172A);
+      _keyBgColor = Color(prefs.getInt('key_bg_color') ?? 0xFF1E293B);
+      _keyTextColor = Color(prefs.getInt('key_text_color') ?? 0xFFFFFFFF);
+    });
+  }
+
+  void _toggleTheme(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
       _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+      if (isDark) {
+        _kbBgColor = const Color(0xFF0F172A);
+        _keyBgColor = const Color(0xFF1E293B);
+        _keyTextColor = Colors.white;
+      } else {
+        _kbBgColor = const Color(0xFFE2E8F0);
+        _keyBgColor = Colors.white;
+        _keyTextColor = Colors.black87;
+      }
     });
+    await prefs.setInt('kb_bg_color', _kbBgColor.value);
+    await prefs.setInt('key_bg_color', _keyBgColor.value);
+    await prefs.setInt('key_text_color', _keyTextColor.value);
   }
 
   void _setKeyboardMode(String mode) {
@@ -35,9 +69,20 @@ class _LekpadAppState extends State<LekpadApp> {
     });
   }
 
+  void _updateCustomColors(Color bg, Color key, Color text) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _kbBgColor = bg;
+      _keyBgColor = key;
+      _keyTextColor = text;
+    });
+    await prefs.setInt('kb_bg_color', bg.value);
+    await prefs.setInt('key_bg_color', key.value);
+    await prefs.setInt('key_text_color', text.value);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 1. Defining the synced custom theme based on Lekpad Icon Option 2
     final darkTheme = ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFFD97706), // Glowing Amber/Gold
@@ -55,10 +100,10 @@ class _LekpadAppState extends State<LekpadApp> {
 
     final lightTheme = ThemeData(
       brightness: Brightness.light,
-      primaryColor: const Color(0xFFD97706), // Golden Amber
-      scaffoldBackgroundColor: const Color(0xFFF1F5F9), // Light Slate
+      primaryColor: const Color(0xFFD97706), 
+      scaffoldBackgroundColor: const Color(0xFFF1F5F9), 
       cardColor: Colors.white,
-      hintColor: const Color(0xFFB91C1C), // Crimson red
+      hintColor: const Color(0xFFB91C1C), 
       colorScheme: const ColorScheme.light(
         primary: Color(0xFFD97706),
         secondary: Color(0xFFF59E0B),
@@ -77,8 +122,12 @@ class _LekpadAppState extends State<LekpadApp> {
         keyboardMode: _keyboardMode,
         previousScript: _previousScript,
         themeMode: _themeMode,
+        kbBgColor: _kbBgColor,
+        keyBgColor: _keyBgColor,
+        keyTextColor: _keyTextColor,
         onThemeChanged: _toggleTheme,
         onModeChanged: _setKeyboardMode,
+        onColorsChanged: _updateCustomColors,
       ),
     );
   }
@@ -88,16 +137,24 @@ class KeyboardDashboard extends StatefulWidget {
   final String keyboardMode;
   final String previousScript;
   final ThemeMode themeMode;
+  final Color kbBgColor;
+  final Color keyBgColor;
+  final Color keyTextColor;
   final Function(bool) onThemeChanged;
   final Function(String) onModeChanged;
+  final Function(Color, Color, Color) onColorsChanged;
 
   const KeyboardDashboard({
     super.key,
     required this.keyboardMode,
     required this.previousScript,
     required this.themeMode,
+    required this.kbBgColor,
+    required this.keyBgColor,
+    required this.keyTextColor,
     required this.onThemeChanged,
     required this.onModeChanged,
+    required this.onColorsChanged,
   });
 
   @override
@@ -108,6 +165,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   final TextEditingController _textController = TextEditingController();
   List<String> _suggestions = [];
   String _clipboardText = '';
+  static const MethodChannel _settingsChannel = MethodChannel('bc.lekpad.balochi/settings');
 
   @override
   void initState() {
@@ -161,12 +219,27 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     });
   }
 
+  bool _isPunctuation(String char) {
+    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '='];
+    return punc.contains(char);
+  }
+
+  // Automatic Ligature Joining: convert 'ے' to 'ݔ' if followed immediately by a letter
   void _insertText(String chars) {
     final text = _textController.text;
     final selection = _textController.selection;
-    final newText = text.replaceRange(selection.start, selection.end, chars);
+    
+    String finalChars = chars;
+    String modifiedText = text;
+    int cursorOffset = selection.start;
+
+    if (selection.start > 0 && text[selection.start - 1] == 'ے' && chars.isNotEmpty && !_isPunctuation(chars)) {
+      modifiedText = text.replaceRange(selection.start - 1, selection.start, 'ݔ');
+    }
+
+    final newText = modifiedText.replaceRange(cursorOffset, selection.end, finalChars);
     _textController.text = newText;
-    _textController.selection = TextSelection.collapsed(offset: selection.start + chars.length);
+    _textController.selection = TextSelection.collapsed(offset: cursorOffset + finalChars.length);
   }
 
   void _backspace() {
@@ -194,13 +267,28 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     return BalochiConfig.localizations[key]?[widget.previousScript] ?? key;
   }
 
+  Future<void> _enableKeyboard() async {
+    try {
+      await _settingsChannel.invokeMethod('openKeyboardSettings');
+    } on PlatformException catch (e) {
+      debugPrint("Failed to open keyboard settings: '${e.message}'.");
+    }
+  }
+
+  Future<void> _chooseKeyboard() async {
+    try {
+      await _settingsChannel.invokeMethod('openKeyboardPicker');
+    } on PlatformException catch (e) {
+      debugPrint("Failed to open keyboard picker: '${e.message}'.");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.themeMode == ThemeMode.dark || 
         (widget.themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
     final textDirection = widget.previousScript == 'balorabi' ? TextDirection.rtl : TextDirection.ltr;
 
-    // Golden and Crimson styles from the selected Icon Option 2
     final accentGold = const Color(0xFFD97706);
     final crimsonThread = const Color(0xFFDC2626);
 
@@ -215,15 +303,13 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(isDark ? Icons.wb_sunny : Icons.nights_stay, color: accentGold),
+            icon: Icon(isDark ? Icons.wb_sunny : Icons.nights_stay),
             onPressed: () => widget.onThemeChanged(!isDark),
           ),
           IconButton(
-            icon: Icon(Icons.swap_horizontal_circle_outlined, color: accentGold),
+            icon: const Icon(Icons.swap_horizontal_circle_outlined),
             tooltip: _getLocalizedText('select_script'),
             onPressed: () {
               widget.onModeChanged(widget.previousScript == 'balorabi' ? 'balotin' : 'balorabi');
@@ -241,7 +327,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Unified Luxury App Header (Matching Dark Leather / Golden 'ل' motif)
+                    // Unified Luxury App Header
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -263,14 +349,13 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
                             children: [
-                              // App Logo representation
                               Container(
                                 width: 70,
                                 height: 70,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF0F172A),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: accentGold, width: 2), // Fixed BorderSide -> Border.all
+                                  border: Border.all(color: accentGold, width: 2), 
                                   boxShadow: [
                                     BoxShadow(
                                       color: accentGold.withOpacity(0.3),
@@ -317,7 +402,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Quick Settings (Redankan)
+                    // Quick Settings (Redankan) with active OS links!
                     Text(
                       _getLocalizedText('settings'),
                       style: GoogleFonts.amiri(
@@ -332,18 +417,18 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                       icon: Icons.keyboard_capslock,
                       title: _getLocalizedText('enable_keyboard'),
                       accentGold: accentGold,
-                      onTap: () {},
+                      onTap: _enableKeyboard, // Actively opens OS settings
                     ),
                     _buildSettingButton(
                       context,
                       icon: Icons.touch_app_outlined,
                       title: _getLocalizedText('choose_keyboard'),
                       accentGold: accentGold,
-                      onTap: () {},
+                      onTap: _chooseKeyboard, // Actively triggers OS input picker
                     ),
                     
                     const SizedBox(height: 16),
-                    // Themes (Rangbandi)
+                    // Themes (Rangbandi) & Custom Colors Panel!
                     Text(
                       _getLocalizedText('themes'),
                       style: GoogleFonts.amiri(
@@ -358,28 +443,60 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(color: accentGold.withOpacity(0.1)),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(isDark ? Icons.nights_stay : Icons.wb_sunny, color: accentGold),
-                                const SizedBox(width: 12),
-                                Text(
-                                  isDark ? _getLocalizedText('night_mode') : _getLocalizedText('day_mode'),
-                                  style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.w500),
+                                Row(
+                                  children: [
+                                    Icon(isDark ? Icons.nights_stay : Icons.wb_sunny, color: accentGold),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      isDark ? _getLocalizedText('night_mode') : _getLocalizedText('day_mode'),
+                                      style: GoogleFonts.amiri(fontSize: 18, fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ),
+                                Switch(
+                                  value: isDark,
+                                  activeColor: accentGold,
+                                  onChanged: widget.onThemeChanged,
                                 ),
                               ],
                             ),
-                            Switch(
-                              value: isDark,
-                              activeColor: accentGold,
-                              onChanged: widget.onThemeChanged,
+                          ),
+                          const Divider(height: 1),
+                          // Custom Colors Customization Suite (Bg, Key, Text)
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'کیبورڈءِ رنگبندی (Custom Key Colors)',
+                                  style: GoogleFonts.amiri(fontSize: 16, fontWeight: FontWeight.bold, color: accentGold),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildColorPickerButton('پس‌زمینه (Bg)', widget.kbBgColor, (color) {
+                                      widget.onColorsChanged(color, widget.keyBgColor, widget.keyTextColor);
+                                    }),
+                                    _buildColorPickerButton('دکمه‌ها (Key)', widget.keyBgColor, (color) {
+                                      widget.onColorsChanged(widget.kbBgColor, color, widget.keyTextColor);
+                                    }),
+                                    _buildColorPickerButton('حروف (Text)', widget.keyTextColor, (color) {
+                                      widget.onColorsChanged(widget.kbBgColor, widget.keyBgColor, color);
+                                    }),
+                                  ],
+                                )
+                              ],
                             ),
-                          ],
-                        ),
+                          )
+                        ],
                       ),
                     ),
 
@@ -423,11 +540,33 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
               ),
             ),
 
-            // ON-SCREEN KEYBOARD SYNCHRONIZED TO LEKPAD THEME
+            // ON-SCREEN KEYBOARD SYNCHRONIZED TO CUSTOM CHOSEN COLORS
             _buildKeyboardUI(isDark, accentGold, crimsonThread),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildColorPickerButton(String label, Color currentColor, Function(Color) onSelect) {
+    final list = [Colors.black, const Color(0xFF0F172A), const Color(0xFF1E293B), const Color(0xFF475569), Colors.white, Colors.amber, const Color(0xFFD97706), const Color(0xFFDC2626), Colors.green, Colors.teal, Colors.blue];
+    return PopupMenuButton<Color>(
+      onSelected: onSelect,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Container(width: 14, height: 14, decoration: BoxDecoration(color: currentColor, shape: BoxShape.circle, border: Border.all(color: Colors.black26))),
+            const SizedBox(width: 6),
+            Text(label, style: GoogleFonts.amiri(fontSize: 12)),
+          ],
+        ),
+      ),
+      itemBuilder: (context) => list.map((c) => PopupMenuItem(value: c, child: Container(width: 30, height: 30, color: c))).toList(),
     );
   }
 
@@ -453,8 +592,8 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   Widget _buildKeyboardUI(bool isDark, Color accentGold, Color crimsonThread) {
-    // Rich Charcoal color matching leather backing of Option 2 App Icon
-    final keyboardBg = isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0);
+    // Dynamic color matches customized values chosen by the user!
+    final keyboardBg = widget.kbBgColor;
     
     List<List<String>> layout;
     if (widget.keyboardMode == 'balorabi') {
@@ -511,7 +650,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF334155) : Colors.amber[100],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: accentGold.withOpacity(0.5)), // Fixed BorderSide -> Border.all
+                  border: Border.all(color: accentGold.withOpacity(0.5)), 
                 ),
                 child: Row(
                   children: [
@@ -561,14 +700,13 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   Widget _buildKeyWidget(String key, bool isDark, Color accentGold, Color crimsonThread) {
-    // Normal key: Charcoal (Dark) or White (Light)
-    final keyBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    // Highlight indicator uses the Crimson Thread red color
+    // Normal key customizable colors
+    final keyBg = widget.keyBgColor;
+    final textColor = widget.keyTextColor;
     final hintColor = isDark ? const Color(0xFFFCA5A5) : crimsonThread;
 
     final hint = BalochiConfig.keyVisualAlternativeHints[key];
-    bool isSpecial = key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC';
+    bool isSpecial = key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123';
 
     Color finalBg = keyBg;
     Widget keyLabel;
@@ -601,7 +739,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           const Icon(Icons.keyboard_return, color: Colors.green, size: 14)
         ],
       );
-    } else if (key == 'ツ' || key == 'ツ Sym') {
+    } else if (key == '؟۱۲۳' || key == '?123') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       keyLabel = Text(
         key,
@@ -632,7 +770,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           widget.onModeChanged('balotin');
         } else if (key == 'اب ...') {
           widget.onModeChanged('balorabi');
-        } else if (key == 'ツ' || key == 'ツ Sym') {
+        } else if (key == '؟۱۲۳' || key == '?123') {
           widget.onModeChanged('symbols1'); 
         } else if (key == 'صفحہ ۲ ◀') {
           widget.onModeChanged('symbols2'); 
@@ -721,7 +859,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: accentGold.withOpacity(0.3)), // Fixed BorderSide -> Border.all
+                          border: Border.all(color: accentGold.withOpacity(0.3)), 
                         ),
                         child: Text(
                           alt,

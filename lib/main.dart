@@ -270,7 +270,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF0F172A),
                                   shape: BoxShape.circle,
-                                  border: BorderSide(color: accentGold, width: 2),
+                                  border: Border.all(color: accentGold, width: 2), // Fixed BorderSide -> Border.all
                                   boxShadow: [
                                     BoxShadow(
                                       color: accentGold.withOpacity(0.3),
@@ -511,7 +511,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF334155) : Colors.amber[100],
                   borderRadius: BorderRadius.circular(8),
-                  border: BorderSide(color: accentGold.withOpacity(0.5)),
+                  border: Border.all(color: accentGold.withOpacity(0.5)), // Fixed BorderSide -> Border.all
                 ),
                 child: Row(
                   children: [
@@ -721,7 +721,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF334155) : Colors.grey[200],
                           borderRadius: BorderRadius.circular(12),
-                          border: BorderSide(color: accentGold.withOpacity(0.3)),
+                          border: Border.all(color: accentGold.withOpacity(0.3)), // Fixed BorderSide -> Border.all
                         ),
                         child: Text(
                           alt,

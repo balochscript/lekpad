@@ -7,6 +7,11 @@ class KeyboardViewController: UIInputViewController {
     private var clipboardButton: UIButton!
     private var mainKeyboardStack: UIStackView!
 
+    // Custom coloring configuration (Synced from Flutter App Group)
+    private var kbBgColor: UIColor = UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0)
+    private var keyBgColor: UIColor = .systemBackground
+    private var keyTextColor: UIColor = .label
+
     // Comprehensive standard dictionary strictly filtered (no ظطضصثقفغعخ)
     private val balorabiVocab = [
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
@@ -57,14 +62,14 @@ class KeyboardViewController: UIInputViewController {
         "ر": ["ڑ"],
         "ژ": ["ظ"],
         "a": ["á", "à", "æ"],
-        "d": ["ď"],
-        "g": ["ĝ"],
-        "i": ["í", "ì"],
-        "r": ["ř"],
-        "s": ["š"],
-        "t": ["ť"],
-        "u": ["ú", "ù"],
-        "z": ["ž"]
+        "d" to ["ď"],
+        "g" to ["ĝ"],
+        "i" to ["í", "ì"],
+        "r" to ["ř"],
+        "s" to ["š"],
+        "t" to ["ť"],
+        "u" to ["ú", "ù"],
+        "z" to ["ž"]
     ]
 
     override func viewDidLoad() {
@@ -81,8 +86,15 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func updateTheme() {
-        let isDark = self.traitCollection.userInterfaceStyle == .dark
-        self.view.backgroundColor = isDark ? UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0) : UIColor(red: 0.92, green: 0.93, blue: 0.95, alpha: 1.0)
+        // Read customization colors from Shared App Group UserDefaults!
+        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
+            if let bgHex = defaults.string(forKey: "kbBgColor") {
+                self.view.backgroundColor = UIColor(hex: bgBgColorHex)
+            } else {
+                let isDark = self.traitCollection.userInterfaceStyle == .dark
+                self.view.backgroundColor = isDark ? UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0) : UIColor(red: 0.92, green: 0.93, blue: 0.95, alpha: 1.0)
+            }
+        }
     }
 
     private func setupTopBar() {
@@ -137,20 +149,32 @@ class KeyboardViewController: UIInputViewController {
             view.removeFromSuperview()
         }
 
-        // Exact layout matching IMG_20260626_214608.png & "مان" / "Màn" as Enter
+        // Exact layout matching IMG_20260626_214608.png (with "ۏ" in row 1, no emojis!)
         let keys: [[String]] = isBalorabi ? [
             ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
-            ["ے", "ی", "ڈ", "ٹ", "و", "ء", "هـ", "ج", "چ", "ءِ"],
+            ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "هـ", "ج", "چ", "ءِ"],
             ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
             ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"],
-            ["ツ", "ABC", "SPACE", "-", "مان"]
+            ["؟۱۲۳", "ABC", "SPACE", "-", "مان"]
         ] : [
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
             ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
             ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
             ["⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"],
-            ["ツ Sym", "اب ...", "SPACE", ".", "Màn"]
+            ["?123", "اب ...", "SPACE", ".", "Màn"]
         ]
+
+        // Fetch custom colors from UserDefaults
+        var customKeyBg = UIColor.systemBackground
+        var customTextColor = UIColor.label
+        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
+            if let keyBgHex = defaults.string(forKey: "keyBgColor") {
+                customKeyBg = UIColor(hex: keyBgHex)
+            }
+            if let keyTextHex = defaults.string(forKey: "keyTextColor") {
+                customTextColor = UIColor(hex: keyTextHex)
+            }
+        }
 
         for row in keys {
             let rowStack = UIStackView()
@@ -161,9 +185,9 @@ class KeyboardViewController: UIInputViewController {
             for key in row {
                 let button = UIButton(type: .system)
                 button.setTitle(key, for: .normal)
-                button.backgroundColor = .systemBackground
+                button.backgroundColor = customKeyBg
                 button.layer.cornerRadius = 5
-                button.setTitleColor(.label, for: .normal)
+                button.setTitleColor(customTextColor, for: .normal)
                 
                 button.addTarget(self, action: #selector(keyTapped(_:)), for: .touchUpInside)
 
@@ -174,6 +198,11 @@ class KeyboardViewController: UIInputViewController {
             }
             mainKeyboardStack.addArrangedSubview(rowStack)
         }
+    }
+
+    private func isPunctuation(_ char: String) -> Bool {
+        let punc = [" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "="]
+        return punc.contains(char)
     }
 
     @objc private func keyTapped(_ sender: UIButton) {
@@ -200,6 +229,12 @@ class KeyboardViewController: UIInputViewController {
             isBalorabi = true
             renderKeys()
         default:
+            // Dynamic Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
+            if let preceding = proxy.documentContextBeforeInput?.last, String(preceding) == "ے", !key.isEmpty, !isPunctuation(key) {
+                proxy.deleteBackward()
+                proxy.insertText("ݔ")
+            }
+            
             proxy.insertText(key)
             let documentContext = proxy.documentContextBeforeInput ?? ""
             let currentWord = documentContext.components(separatedBy: " ").last ?? ""
@@ -275,5 +310,27 @@ class KeyboardViewController: UIInputViewController {
         if let clipboardText = UIPasteboard.general.string {
             self.textDocumentProxy.insertText(clipboardText)
         }
+    }
+}
+
+// Swift helper extension for hex string to UIColor parsing
+extension UIColor {
+    convenience init(hex: String) {
+        var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercaseString
+        if (cString.hasPrefix("#")) {
+            cString.remove(at: cString.startIndex)
+        }
+        if ((cString.count) != 6) {
+            self.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
+            return
+        }
+        var rgbValue: UInt64 = 0
+        Scanner(string: cString).scanHexInt64(&rgbValue)
+        self.init(
+            red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+            green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+            blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+            alpha: CGFloat(1.0)
+        )
     }
 }

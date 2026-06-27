@@ -1,7 +1,6 @@
 // Lekpad Standard Keyboard Configuration, Layout Mappings, Dictionary, and Symbols
 class BalochiConfig {
   // 1. Dual-Script Localization Dictionary (Balòrabi & Balòtin)
-  // Restored app display name to "Lekpad" (لِکپَد) as requested!
   static const Map<String, Map<String, String>> localizations = {
     'app_title': {
       'balorabi': 'لِکپَد',
@@ -91,13 +90,14 @@ class BalochiConfig {
     'Jòďènag', 'Jòďènòk', 'Banènag', 'Banènòk', 'Banèntagèn', 'Aď', 'Šarr', 'Šauk', 'Zabardast'
   ];
 
-  // 3. Precise Balòrabi Layout Definition (Matching bottom keyboard in image, with "ۏ" in Row 1!)
+  // 3. Precise Balòrabi Layout Definition (with "ھ" instead of "هـ", and "۔" for Balochi full stop)
+  // Standardised non-character keys with minimal icon symbols (⌫ for Backspace, ⏎ for Enter)
   static const List<List<String>> balorabiLayout = [
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], 
-    ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'ھ', 'ج', 'چ', 'ءِ'], // FIXED: Replaced 'هـ' with 'ھ'
+    ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'ھ', 'ج', 'چ', 'ءِ'], 
     ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], 
-    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', 'پاکے'], 
-    ['؟۱۲۳', '🌐', ' ', '۔', 'مان'] 
+    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', '⌫'], // FIXED: Replaced 'پاکے' with minimal '⌫' icon!
+    ['؟۱۲۳', '🌐', ' ', '۔', '⏎'] // FIXED: Replaced 'مان' with minimal '⏎' icon!
   ];
 
   // 4. Precise Balòtin Layout Definition
@@ -105,8 +105,8 @@ class BalochiConfig {
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], 
     ['À', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ť'], 
     ['A', 'Š', 'S', 'D', 'Ď', 'G', 'H', 'J', 'K', 'L', 'Ò'], 
-    ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', 'Pàk'], 
-    ['?123', '🌐', ' ', '.', 'Màn'] 
+    ['⬆', 'Z', 'Ž', 'C', 'È', 'B', 'N', 'M', '⌫'], // FIXED: Replaced 'Pàk' with minimal '⌫' icon!
+    ['?123', '🌐', ' ', '.', '⏎'] // FIXED: Replaced 'Màn' with minimal '⏎' icon!
   ];
 
   // 5. Symbols Page 1 Layout
@@ -114,8 +114,8 @@ class BalochiConfig {
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
     ['+', '×', '÷', '=', '٪', '^', '!', '@', '#', '\$'],
     ['/', '\\', '~', '*', '(', ')', '-', '_', '|', '&'],
-    ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', 'Pàk'], 
-    ['🌐', ' ', 'Màn']
+    ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', '⌫'], 
+    ['🌐', ' ', '⏎']
   ];
 
   // 6. Symbols Page 2 Layout
@@ -123,8 +123,8 @@ class BalochiConfig {
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'],
     ['،', '؟', '?', '.', ',', ':', ';', '"', '\'', '|'],
     ['❂', 'Ꝃ', '★', '☆', '✦', '❖', '◈', '✿', '✛', '✜'],
-    ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', 'پاکے'], 
-    ['🌐', ' ', 'مان']
+    ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', '⌫'], 
+    ['🌐', ' ', '⏎']
   ];
 
   // 7. Refined High-fidelity Long Press & Alternative Letters Mappings

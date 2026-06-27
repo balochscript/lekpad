@@ -23,6 +23,11 @@ class BalochiInputMethod : InputMethodService() {
     private var isNightMode: Boolean = false
     private var isBalorabi: Boolean = true
 
+    // Dynamic customization color states
+    private var kbBgColor: Int = 0xFF0F172A.toInt()
+    private var keyBgColor: Int = 0xFF1E293B.toInt()
+    private var keyTextColor: Int = 0xFFFFFFFF.toInt()
+
     // Comprehensive dictionary strictly filtered (no ظطضصثقفغعخ)
     private val balorabiVocab = listOf(
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
@@ -40,7 +45,7 @@ class BalochiInputMethod : InputMethodService() {
     )
 
     private val balotinVocab = listOf(
-        "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Diwàl", "Dràj",
+        "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj",
         "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik",
         "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag",
         "Ustum", "Ustàz", "Òlàk", "Òšt", "Pattar", "Pit", "Poll", "Rung", "Ràhšòn", "Siyàh",
@@ -103,22 +108,27 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        val backgroundColor = if (isNightMode) 0xFF0F172A.toInt() else 0xFFE0F2FE.toInt()
-        keyboardView.setBackgroundColor(backgroundColor)
+        // Dynamic: Read customizable colors chosen by the user from Shared Preferences!
+        val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        kbBgColor = prefs.getInt("flutter.kb_bg_color", if (isNightMode) 0xFF0F172A.toInt() else 0xFFE2E8F0.toInt())
+        keyBgColor = prefs.getInt("flutter.key_bg_color", if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt())
+        keyTextColor = prefs.getInt("flutter.key_text_color", if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt())
+
+        keyboardView.setBackgroundColor(kbBgColor)
     }
 
     private fun setupKeyboardLayout() {
         val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container)
         layoutContainer.removeAllViews()
 
-        // Precise rows matching IMG_20260626_214608.png & Custom enter "مان" / "Màn"
+        // Precise rows matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji button "?۱۲۳")
         val rows = if (isBalorabi) {
             listOf(
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
-                listOf("ے", "ی", "ڈ", "ٹ", "و", "ء", "هـ", "ج", "چ", "ءِ"),
+                listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "هـ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
-                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاک"),
-                listOf("ツ", "ABC", "SPACE", "-", "مان")
+                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "پاکے"),
+                listOf("؟۱۲۳", "ABC", "SPACE", "-", "مان")
             )
         } else {
             listOf(
@@ -126,7 +136,7 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"),
                 listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"),
                 listOf("⬆", "Z", "Ž", "C", "È", "B", "N", "M", "Pàk"),
-                listOf("ツ Sym", "اب ...", "SPACE", ".", "Màn")
+                listOf("?123", "اب ...", "SPACE", ".", "Màn")
             )
         }
 
@@ -142,6 +152,10 @@ class BalochiInputMethod : InputMethodService() {
             for (key in row) {
                 val keyButton = Button(this).apply {
                     text = key
+                    // Set custom colors dynamically from user choices!
+                    setBackgroundColor(keyBgColor)
+                    setTextColor(keyTextColor)
+                    
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f).apply {
                         setMargins(2, 2, 2, 2)
                     }
@@ -157,6 +171,11 @@ class BalochiInputMethod : InputMethodService() {
         }
     }
 
+    private fun isPunctuation(char: String): Boolean {
+        val punc = listOf(" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=")
+        return punc.contains(char)
+    }
+
     private fun handleKeyPress(key: String) {
         val ic: InputConnection = currentInputConnection ?: return
         when (key) {
@@ -164,7 +183,7 @@ class BalochiInputMethod : InputMethodService() {
                 ic.commitText(" ", 1)
                 updateWordPredictions("")
             }
-            "پاک", "Pàk" -> {
+            "پاکے", "Pàk" -> {
                 ic.deleteSurroundingText(1, 0)
                 updateWordPredictions("")
             }
@@ -181,6 +200,13 @@ class BalochiInputMethod : InputMethodService() {
                 setupKeyboardLayout()
             }
             else -> {
+                // Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
+                val preceding = ic.getTextBeforeCursor(1, 0)
+                if (preceding != null && preceding == "ے" && key.isNotEmpty() && !isPunctuation(key)) {
+                    ic.deleteSurroundingText(1, 0)
+                    ic.commitText("ݔ", 1)
+                }
+                
                 ic.commitText(key, 1)
                 val currentWord = ic.getTextBeforeCursor(10, 0)?.split(" ")?.lastOrNull() ?: ""
                 updateWordPredictions(currentWord.toString())
@@ -227,7 +253,7 @@ class BalochiInputMethod : InputMethodService() {
                 text = word
                 textSize = 16f
                 setPadding(20, 10, 20, 10)
-                setTextColor(if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF000000.toInt())
+                setTextColor(keyTextColor) // Unified customizable textColor
                 setOnClickListener {
                     replaceCurrentWord(currentWord, word)
                 }
@@ -255,6 +281,7 @@ class BalochiInputMethod : InputMethodService() {
                     text = "📋 " + if (clipText.length > 15) clipText.take(12) + "..." else clipText
                     textSize = 14f
                     setPadding(15, 10, 15, 10)
+                    setTextColor(keyTextColor)
                     setOnClickListener {
                         val ic: InputConnection = currentInputConnection
                         ic.commitText(clipText, 1)

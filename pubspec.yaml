@@ -13,6 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   shared_preferences: ^2.2.2
   flutter_colorpicker: ^1.0.3
+  audioplayers: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,9 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/sounds/key_click.mp3
 
   fonts:
     - family: Amiri

@@ -110,8 +110,14 @@ if main_target
     embed_extensions_phase.symbol_dst_subfolder_spec = :plug_ins
   end
   embed_extensions_phase.add_file_reference(extension_target.product_reference)
+
+  # CRUCIAL: Reorder build phases to put "Embed App Extensions" at the VERY END!
+  # This breaks the circular dependency cycle in Xcode's new build system.
+  build_phases = main_target.build_phases
+  build_phases.delete(embed_extensions_phase)
+  build_phases.push(embed_extensions_phase) # Force it to execute after thinning, compiling, and Info.plist processing!
 end
 
 # 10. Save Xcode project changes
 project.save
-puts "Successfully configured iOS App Extension for Lekpad with standard pathings!"
+puts "Successfully configured iOS App Extension for Lekpad with standard pathings and cycle-free phases!"

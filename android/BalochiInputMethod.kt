@@ -6,9 +6,6 @@ import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
-import android.media.AudioManager
-import android.os.Handler
-import android.os.Looper
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
@@ -144,9 +141,8 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        // Dynamic: FIXED! Use getLong for ALL THREE colors to prevent Long-to-Int ClassCastException!
+        // Dynamic: Read customizable colors from Shared Preferences using getLong to prevent ClassCastException!
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        
         kbBgColor = prefs.getLong("flutter.kb_bg_color", if (isNightMode) 0xFF0F172A else 0xFFE2E8F0).toInt()
         keyBgColor = prefs.getLong("flutter.key_bg_color", if (isNightMode) 0xFF1E293B else 0xFFFFFFFF).toInt()
         keyTextColor = prefs.getLong("flutter.key_text_color", if (isNightMode) 0xFFFFFFFF else 0xFF111827).toInt()
@@ -375,7 +371,7 @@ class BalochiInputMethod : InputMethodService() {
                 setupKeyboardLayout()
             }
             "اب/ABC" -> {
-                keyboardLayoutMode = if (isBalorabi) "balorabi" else "balotin"
+                keyboardLayoutMode = if (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2") "balorabi" else "balotin"
                 setupKeyboardLayout()
             }
             "SHIFT", "⬆" -> {

@@ -6,9 +6,9 @@ import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
-import android.media.AudioManager // FIXED: Added missing import!
-import android.os.Handler // FIXED: Added missing import!
-import android.os.Looper // FIXED: Added missing import!
+import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
@@ -25,7 +25,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import bc.lekpad.balochi.R // The single, exact compiled package resource R class
+import bc.lekpad.balochi.R
 
 class BalochiInputMethod : InputMethodService() {
 
@@ -34,28 +34,24 @@ class BalochiInputMethod : InputMethodService() {
     private lateinit var clipboardBar: LinearLayout
     private var isNightMode: Boolean = false
     
-    // Custom layout state: "balorabi", "balotin", "symbols1", "symbols2"
     private var keyboardLayoutMode: String = "balorabi" 
-    private var isShiftActive: Boolean = false // Track Shift state for Balotin layout
+    private var isShiftActive: Boolean = false
 
-    // Dynamic customization color states
     private var kbBgColor: Int = 0xFF0F172A.toInt()
     private var keyBgColor: Int = 0xFF1E293B.toInt()
     private var keyTextColor: Int = 0xFFFFFFFF.toInt()
     private var amiriTypeface: Typeface? = null
 
-    // Handler and Runnable for Android Auto-Repeat Backspace on Long Press!
     private var backspaceHandler: Handler? = null
     private val backspaceRunnable = object : Runnable {
         override fun run() {
             val ic = currentInputConnection
             ic?.deleteSurroundingText(1, 0)
-            playKeyPressSound(AudioManager.FX_KEYPRESS_DELETE) // Play delete click sound repeatedly
-            backspaceHandler?.postDelayed(this, 100) // Repeat every 100 milliseconds!
+            playKeyPressSound(AudioManager.FX_KEYPRESS_DELETE)
+            backspaceHandler?.postDelayed(this, 100)
         }
     }
 
-    // Comprehensive dictionary strictly filtered (no ظطضصثقفغعخ)
     private val balorabiVocab = listOf(
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
         "ڈُنگ", "ڈَل", "اِشک", "اݔدام", "بݔر", "اِسبݔت", "گَنش", "گُب", "گوارَگ", "ھئیک",
@@ -66,7 +62,7 @@ class BalochiInputMethod : InputMethodService() {
         "سَلام", "والِک", "چونَے", "چونے", "مَن", "وشوں", "تَو", "هَں", "چہ", "هال", "اِنت", 
         "وَش", "سَلامتے", "جۏڑی", "هَور", "جمبر", "استین", "استون", "گرند", "گُرۏک", "ترَمپ", 
         "ترۏنگل", "گوات", "سَنگُل", "سُهر", "بیر", "گوارَگ", "هار", "کَور", "شݔپ", "لوڈ", "لَهڈ", 
-        "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", 
+        "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", 
         "وَڈݔنَگ", "وَڈݔنۏک", "جۏڈݔنَگ", "جۏڈݔنۏک", "بَنݔنَگ", "بَنݔنۏک", "بَنݔنتگیں", "اَڈ", 
         "شَرر", "شؤک", "زَبَردَست"
     )
@@ -81,28 +77,27 @@ class BalochiInputMethod : InputMethodService() {
         "Salàm", "Vàlaik", "Čònai", "Man", "Vašaon", "Tà", "Han", "Ce", "Hàl", "Ent", "Vaš", "Salàmati", "Jòďī",
         "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", 
         "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", 
-        "Baččènòk", "Bačchetagèn", "Bačchèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", 
+        "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", 
         "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast"
     )
 
-    // Long press mapping hints
     private val longPressMappings = mapOf(
-        "ت" to listOf("ث", "ط"),
+        "ت" to listOf("ث", "ط", "ّ"),
         "ج" to listOf("ح"),
         "چ" to listOf("خ"),
         "د" to listOf("ذ"),
         "س" to listOf("ص"),
         "ز" to listOf("ض", "ظ"),
-        "ا" to listOf("ع", "آ", "أ", "إ"),
+        "ا" to listOf("ع", "آ", "أ", "إ", "َ", "ِ", "ُ"),
         "گ" to listOf("غ"),
         "پ" to listOf("ف"),
         "ک" to listOf("ق"),
         "ھ" to listOf("ہ", "هـ", "ح", "ه"), 
         "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
         "و" to listOf("ۏ", "ؤ", "وْ", "وُ"),
-        "ۏ" to listOf("و", "ؤ", "وْ", "وُ"),
+        "ۏ" to listOf("ۇ", "و", "ؤ", "وْ", "وُ"),
         "ی" to listOf("ݔ", "ے", "یْ", "یٰ", "ئ"),
-        "ن" to listOf("ں", "نٚ"),
+        "ن" to listOf("ں", "نٚ", "ْ"),
         "ر" to listOf("ڑ"),
         "ژ" to listOf("ظ"),
         "۔" to listOf("ـ", "—", "-"), 
@@ -121,14 +116,12 @@ class BalochiInputMethod : InputMethodService() {
         val currentNightMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
         isNightMode = currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
 
-        // Inflate keyboard view
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         keyboardView = inflater.inflate(R.layout.keyboard_view, null)
 
         suggestionBar = keyboardView.findViewById(R.id.suggestion_bar)
         clipboardBar = keyboardView.findViewById(R.id.clipboard_bar)
 
-        // Try loading the offline Amiri font compiled by Flutter dynamically!
         try {
             amiriTypeface = Typeface.createFromAsset(assets, "flutter_assets/assets/fonts/Amiri-Regular.ttf")
         } catch (e: Exception) {
@@ -144,19 +137,34 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        // Dynamic: FIXED! Use getLong for ALL THREE colors to prevent Long-to-Int ClassCastException!
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         
-        kbBgColor = prefs.getLong("flutter.kb_bg_color", if (isNightMode) 0xFF0F172A else 0xFFE2E8F0).toInt()
-        keyBgColor = prefs.getLong("flutter.key_bg_color", if (isNightMode) 0xFF1E293B else 0xFFFFFFFF).toInt()
-        keyTextColor = prefs.getLong("flutter.key_text_color", if (isNightMode) 0xFFFFFFFF else 0xFF111827).toInt()
+        val kbBgHex = prefs.getString("flutter.kb_bg_color_hex", null)
+        val keyBgHex = prefs.getString("flutter.key_bg_color_hex", null)
+        val keyTextHex = prefs.getString("flutter.key_text_color_hex", null)
+        
+        kbBgColor = if (kbBgHex != null) {
+            android.graphics.Color.parseColor(kbBgHex)
+        } else {
+            if (isNightMode) 0xFF0F172A.toInt() else 0xFFE2E8F0.toInt()
+        }
+        
+        keyBgColor = if (keyBgHex != null) {
+            android.graphics.Color.parseColor(keyBgHex)
+        } else {
+            if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt()
+        }
+        
+        keyTextColor = if (keyTextHex != null) {
+            android.graphics.Color.parseColor(keyTextHex)
+        } else {
+            if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
+        }
 
         keyboardView.setBackgroundColor(kbBgColor)
     }
 
-    // High-fidelity spanned text formatter (large main character in center, small red hint on top-right!)
     private fun getSpannedKeyText(mainKey: String): CharSequence {
-        // If it's a technical key, just return plain icon/label
         if (mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn") {
             return when (mainKey) {
                 "SPACE", " " -> "␣"
@@ -171,11 +179,9 @@ class BalochiInputMethod : InputMethodService() {
         val hint = longPressMappings[mainKey]?.firstOrNull() ?: return mainKey
         val spanText = SpannableString("$mainKey $hint")
         
-        // Large main key
         spanText.setSpan(AbsoluteSizeSpan(18, true), 0, mainKey.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spanText.setSpan(ForegroundColorSpan(keyTextColor), 0, mainKey.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         
-        // Small crimson red/purple alternative hint
         val hintStart = mainKey.length + 1
         spanText.setSpan(AbsoluteSizeSpan(10, true), hintStart, spanText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spanText.setSpan(ForegroundColorSpan(0xFFDC2626.toInt()), hintStart, spanText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -189,14 +195,13 @@ class BalochiInputMethod : InputMethodService() {
         val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container)
         layoutContainer.removeAllViews()
 
-        // Dynamic multi-mode layouts
         val rows = when (keyboardLayoutMode) {
             "balorabi" -> listOf(
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
                 listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
                 listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"),
-                listOf("؟۱۲۳", "GLOBE", "ZWNJ", "SPACE", "۔", "ENTER")
+                listOf("؟۱۲۳", "GLOBE", "SPACE", "۔", "ENTER")
             )
             "balotin" -> listOf(
                 listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
@@ -212,7 +217,7 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"),
                 listOf("اب/ABC", "SPACE", "ENTER")
             )
-            else -> listOf( // "symbols2"
+            else -> listOf(
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
                 listOf("،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"),
                 listOf("❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"),
@@ -222,14 +227,13 @@ class BalochiInputMethod : InputMethodService() {
         }
 
         val density = resources.displayMetrics.density
-        val keyHeightPx = (45 * density).toInt() // COMPACT: comfortable 45dp height to match Flutter app!
+        val keyHeightPx = (45 * density).toInt()
 
         val isRtlMode = (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2")
 
         for (row in rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                // Force RTL direction for Balorabi (Arabic) so keys flow naturally from right to left!
                 layoutDirection = if (isRtlMode) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
                 
                 layoutParams = LinearLayout.LayoutParams(
@@ -246,12 +250,12 @@ class BalochiInputMethod : InputMethodService() {
                     }
                     
                     text = getSpannedKeyText(displayKey)
+                    setTextColor(keyTextColor)
                     setPadding(0, 0, 0, 0)
                     
-                    // DYNAMIC HIGH-AESTHETIC STYLING (MATCHING FLUTTER EXACTLY!)
                     val keyDrawable = GradientDrawable().apply {
                         setColor(keyBgColor)
-                        cornerRadius = 16f // 16px rounded corners matching simulator!
+                        cornerRadius = 16f
                         setStroke(1, 0x1A000000) 
                     }
                     background = keyDrawable
@@ -261,27 +265,22 @@ class BalochiInputMethod : InputMethodService() {
                         typeface = amiriTypeface
                     }
                     
-                    // SPACEBAR WIDENING SUPPORT: Make spacebar button occupy exactly 40% of horizontal space!
                     val weight = if (key == " " || key == "SPACE") 3.0f else 1.0f
                     
                     layoutParams = LinearLayout.LayoutParams(0, keyHeightPx, weight).apply {
-                        setMargins((2 * density).toInt(), (3 * density).toInt(), (2 * density).toInt(), (3 * density).toInt()) // Cozy identical margins!
+                        setMargins((2 * density).toInt(), (3 * density).toInt(), (2 * density).toInt(), (3 * density).toInt())
                     }
 
-                    // AUTO-REPEAT BACKSPACE: If key is BACKSPACE, apply the long-press auto-repeating touch listener!
                     if (key == "BACKSPACE") {
                         setOnTouchListener(object : View.OnTouchListener {
                             override fun onTouch(v: View, event: MotionEvent): Boolean {
                                 when (event.action) {
                                     MotionEvent.ACTION_DOWN -> {
-                                        // Delete immediately on press
                                         val ic = currentInputConnection
                                         ic?.deleteSurroundingText(1, 0)
                                         
-                                        // Play standard keypress delete sound
                                         playKeyPressSound(AudioManager.FX_KEYPRESS_DELETE)
                                         
-                                        // Start repeating timer after a 500ms initial holding delay
                                         if (backspaceHandler == null) {
                                             backspaceHandler = Handler(Looper.getMainLooper())
                                         }
@@ -289,7 +288,6 @@ class BalochiInputMethod : InputMethodService() {
                                         return true
                                     }
                                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                        // Stop repeating on lift
                                         backspaceHandler?.removeCallbacks(backspaceRunnable)
                                         return true
                                     }
@@ -298,7 +296,6 @@ class BalochiInputMethod : InputMethodService() {
                             }
                         })
                     } else {
-                        // Standard click listener for other keys
                         setOnClickListener { handleKeyPress(key) }
                         setOnLongClickListener { 
                             showLongPressPopup(this, key)
@@ -317,7 +314,6 @@ class BalochiInputMethod : InputMethodService() {
         return punc.contains(char)
     }
 
-    // Play native system keypress sound effect if enabled in settings!
     private fun playKeyPressSound(effectType: Int) {
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         val soundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
@@ -330,7 +326,6 @@ class BalochiInputMethod : InputMethodService() {
     private fun handleKeyPress(key: String) {
         val ic: InputConnection = currentInputConnection ?: return
         
-        // Play appropriate keypress click sound natively!
         when (key) {
             "SPACE", " " -> playKeyPressSound(AudioManager.FX_KEYPRESS_SPACEBAR)
             "ENTER", "⏎" -> playKeyPressSound(AudioManager.FX_KEYPRESS_RETURN)
@@ -382,8 +377,8 @@ class BalochiInputMethod : InputMethodService() {
                 isShiftActive = !isShiftActive
                 setupKeyboardLayout() 
             }
-            "ZWNJ" -> {
-                ic.commitText("\u200C", 1) // Commit Zero Width Non-Joiner!
+            "◀▶" -> {
+                ic.commitText("\u200C", 1)
             }
             else -> {
                 var typedKey = key
@@ -409,6 +404,9 @@ class BalochiInputMethod : InputMethodService() {
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val popupView = inflater.inflate(R.layout.popup_keyboard, null) as LinearLayout
         
+        popupView.setBackgroundColor(keyBgColor)
+        popupView.setPadding(16, 12, 16, 12)
+        
         val popupWindow = PopupWindow(
             popupView,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -419,9 +417,20 @@ class BalochiInputMethod : InputMethodService() {
         for (alt in alternatives) {
             val altButton = Button(this).apply {
                 text = alt
+                textSize = 18f
+                setTextColor(keyTextColor)
                 if (amiriTypeface != null) {
                     typeface = amiriTypeface
                 }
+                
+                val buttonDrawable = GradientDrawable().apply {
+                    setColor(kbBgColor)
+                    cornerRadius = 12f
+                    setStroke(2, 0xFFD97706.toInt())
+                }
+                background = buttonDrawable
+                setPadding(20, 10, 20, 10)
+                
                 setOnClickListener {
                     val ic: InputConnection = currentInputConnection
                     ic.commitText(alt, 1)
@@ -431,7 +440,7 @@ class BalochiInputMethod : InputMethodService() {
             popupView.addView(altButton)
         }
 
-        popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 100, Gravity.CENTER)
+        popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 120, Gravity.CENTER)
     }
 
     private fun updateWordPredictions(currentWord: String) {
@@ -439,7 +448,11 @@ class BalochiInputMethod : InputMethodService() {
         if (currentWord.isEmpty()) return
 
         val vocabList = if (keyboardLayoutMode == "balorabi") balorabiVocab else balotinVocab
-        val predictions = vocabList.filter { it.startsWith(currentWord, ignoreCase = true) }.take(4)
+        val normalizedCurrentWord = currentWord.replace("ݔ", "ے")
+        val predictions = vocabList.filter { 
+            val normalizedWord = it.replace("ݔ", "ے")
+            normalizedWord.startsWith(normalizedCurrentWord, ignoreCase = true)
+        }.take(4)
 
         for (word in predictions) {
             val suggestionView = TextView(this).apply {

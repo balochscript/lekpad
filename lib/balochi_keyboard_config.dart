@@ -1,4 +1,3 @@
-
 class BalochiConfig {
   static const Map<String, Map<String, String>> localizations = {
     'app_title': {
@@ -26,12 +25,16 @@ class BalochiConfig {
       'balotin': 'Ròc e ďaul(Ispèt)',
     },
     'night_mode': {
-      'balorabi': 'شپءِ ڈؤل(سیاه)',
+      'balorabi': 'شپءِ ڈؤل(سیاہ)',
       'balotin': 'Šap e ďaul(Siyàh)',
     },
     'sound_enabled': {
       'balorabi': 'بٹنءِ توار',
       'balotin': 'Baťan e tawàr',
+    },
+    'sound_volume': {
+      'balorabi': 'توارءِ اندازہ',
+      'balotin': 'Tawàr e andàza',
     },
     'kb_bg_color': {
       'balorabi': 'چݔرگݔج',
@@ -44,6 +47,18 @@ class BalochiConfig {
     'key_text_color': {
       'balorabi': 'سیاهَگ',
       'balotin': 'Siyàhag',
+    },
+    'color_picker_title': {
+      'balorabi': 'بٹنءِ رنگءِ گچݔن',
+      'balotin': 'Baťan e rang e gecèn',
+    },
+    'confirm': {
+      'balorabi': 'مننَگ',
+      'balotin': 'mannag',
+    },
+    'cancel': {
+      'balorabi': 'بَججَگ',
+      'balotin': 'bajjag',
     },
     'help_guide': {
       'balorabi': 'سرۏشتادی',
@@ -102,8 +117,8 @@ class BalochiConfig {
     ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '۰'], 
     ['ے', 'ی', 'ڈ', 'ٹ', 'ۏ', 'ء', 'ھ', 'ج', 'چ', 'ءِ'], 
     ['ش', 'س', 'ی', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'پ'], 
-    ['◀▶', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', '⌫'], 
-    ['؟۱۲۳', '🌐', ' ', '۔', '⏎'] 
+    ['⚙️', 'ژ', 'ز', 'ر', 'د', 'و', 'ک', 'گ', '⌫'], 
+    ['؟۱۲۳', '🌐', '◀▶', ' ', '۔', '⏎'] 
   ];
 
   static const List<List<String>> balotinLayout = [
@@ -119,7 +134,7 @@ class BalochiConfig {
     ['+', '×', '÷', '=', '٪', '^', '!', '@', '#', '\$'],
     ['/', '\\', '~', '*', '(', ')', '-', '_', '|', '&'],
     ['2/2 →', '[', ']', '{', '}', '<', '>', '❂', '⌫'], 
-    ['🌐', ' ', 'Màn']
+    ['اب/ABC', ' ', '⏎']
   ];
 
   static const List<List<String>> symbolsLayout2 = [
@@ -127,7 +142,7 @@ class BalochiConfig {
     ['،', '؟', '?', '.', ',', ':', ';', '"', '\'', '|'],
     ['❂', 'Ꝃ', '★', '☆', '✦', '❖', '◈', '✿', '✛', '✜'],
     ['← 1/2', '⚔', '🌴', '🐫', '🏔', '☪', '✵', '✹', '⌫'], 
-    ['🌐', ' ', 'مان']
+    ['اب/ABC', ' ', 'مان']
   ];
 
   static const Map<String, String> keyVisualAlternativeHints = {

@@ -1,8 +1,10 @@
 import UIKit
 
-class KeyboardViewController: UIInputViewController {
+class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { // Conforms to audio feedback protocol!
 
-    private var isBalorabi: Bool = true
+    private var keyboardLayoutMode: String = "balorabi" // "balorabi", "balotin", "symbols1", "symbols2"
+    private var isShiftActive: Bool = false
+
     private var predictionBar: UIStackView!
     private var clipboardButton: UIButton!
     private var mainKeyboardStack: UIStackView!
@@ -11,10 +13,17 @@ class KeyboardViewController: UIInputViewController {
     private var kbBgColor: UIColor = UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0)
     private var keyBgColor: UIColor = .systemBackground
     private var keyTextColor: UIColor = .label
-    private var isShiftActive: Bool = false
+
+    // Timer for Swift Auto-Repeat Backspace on Long Press!
+    private var backspaceTimer: Timer?
+
+    // Required protocol property to allow playing native input clicks
+    var enableInputClicksWhenVisible: Bool {
+        return true
+    }
 
     // Comprehensive standard dictionary strictly filtered (no ظطضصثقفغعخ)
-    private let balorabiVocab = [ // Fixed: 'val' changed to 'let' in Swift!
+    private let balorabiVocab = [
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
         "ڈُنگ", "ڈَل", "اِشک", "اݔدام", "بݔر", "اِسبݔت", "گَنش", "گُب", "گوارَگ", "ھئیک",
         "ھال", "ھَشت", "کِرر", "کَپپَگی", "لَھم", "لَشکَر", "مادَگ", "مار", "نَمیبگ", "نِھݔپَگ",
@@ -29,7 +38,7 @@ class KeyboardViewController: UIInputViewController {
         "شَرر", "شؤک", "زَبَردَست"
     ]
 
-    private let balotinVocab = [ // Fixed: 'val' changed to 'let' in Swift!
+    private let balotinVocab = [
         "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj",
         "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik",
         "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag",
@@ -44,7 +53,7 @@ class KeyboardViewController: UIInputViewController {
     ]
 
     // Long press alternative letters mappings
-    private let longPressMappings: [String: [String]] = [ // Fixed: 'val' changed to 'let' in Swift!
+    private let longPressMappings: [String: [String]] = [
         "ت": ["ث", "ط"],
         "ج": ["ح"],
         "چ": ["خ"],
@@ -145,28 +154,91 @@ class KeyboardViewController: UIInputViewController {
         renderKeys()
     }
 
+    // High-fidelity rich text formatter (large main character in center, small red hint on top-right!)
+    private func getSpannedKeyText(mainKey: String, textColor: UIColor) -> NSAttributedString {
+        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
+            
+            var displayLabel = mainKey
+            if mainKey == "SPACE" || mainKey == " " {
+                displayLabel = "␣"
+            } else if mainKey == "BACKSPACE" || mainKey == "⌫" {
+                displayLabel = "⌫"
+            } else if mainKey == "ENTER" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
+                displayLabel = "⏎"
+            } else if mainKey == "GLOBE" {
+                displayLabel = "🌐"
+            } else if mainKey == "SHIFT" {
+                displayLabel = "⬆"
+            }
+            
+            return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
+        }
+
+        guard let alternatives = longPressMappings[mainKey], let hint = alternatives.first else {
+            return NSAttributedString(string: mainKey, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
+        }
+        
+        let mainFont = UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)
+        let hintFont = UIFont(name: "Amiri", size: 10) ?? UIFont.systemFont(ofSize: 10)
+        
+        let attributedString = NSMutableAttributedString(string: "\(mainKey) ", attributes: [
+            .font: mainFont,
+            .foregroundColor: textColor
+        ])
+        
+        let hintAttributedString = NSAttributedString(string: hint, attributes: [
+            .font: hintFont,
+            .foregroundColor: UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1.0), // Crimson Red
+            .baselineOffset: 8 // Superscript effect!
+        ])
+        
+        attributedString.append(hintAttributedString)
+        return attributedString
+    }
+
     private func renderKeys() {
         for view in mainKeyboardStack.arrangedSubviews {
             mainKeyboardStack.removeArrangedSubview(view)
             view.removeFromSuperview()
         }
 
-        // Exact layout matching IMG_20260626_214608.png (with "ۏ" in row 1, non-emoji "؟۱۲۳", and "ھ" instead of "هـ")
-        let keys: [[String]] = isBalorabi ? [
-            ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
-            ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
-            ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
-            ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"],
-            ["؟۱۲۳", "🌐", " ", "۔", "مان"]
-        ] : [
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-            ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
-            ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
-            ["⬆", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"],
-            ["?123", "🌐", " ", ".", "Màn"]
-        ]
+        let keys: [[String]] = {
+            switch keyboardLayoutMode {
+            case "balorabi":
+                return [
+                    ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
+                    ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
+                    ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
+                    ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],
+                    ["؟۱۲۳", "GLOBE", "SPACE", "۔", "ENTER"]
+                ]
+            case "balotin":
+                return [
+                    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                    ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
+                    ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
+                    ["SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "BACKSPACE"],
+                    ["?123", "GLOBE", "SPACE", ".", "ENTER"]
+                ]
+            case "symbols1":
+                return [
+                    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                    ["+", "×", "÷", "=", "٪", "^", "!", "@", "#", "$"],
+                    ["/", "\\", "~", "*", "(", ")", "-", "_", "|", "&"],
+                    ["2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"],
+                    ["اب/ABC", "SPACE", "ENTER"]
+                ]
+            default: // "symbols2"
+                return [
+                    ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
+                    ["،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"],
+                    ["❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"],
+                    ["← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "BACKSPACE"],
+                    ["اب/ABC", "SPACE", "ENTER"]
+                ]
+            }
+        }()
 
-        // Fetch custom colors from UserDefaults
         var customKeyBg = UIColor.systemBackground
         var customTextColor = UIColor.label
         if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
@@ -178,49 +250,99 @@ class KeyboardViewController: UIInputViewController {
             }
         }
 
+        let isRtlMode = (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2")
+
         for row in keys {
             let rowStack = UIStackView()
             rowStack.axis = .horizontal
-            rowStack.distribution = .fillEqually
             rowStack.spacing = 5
             
-            // Force Right-to-Left alignment dynamically for Arabic-Balorabi script layout!
-            if isBalorabi {
+            if isRtlMode {
                 rowStack.semanticContentAttribute = .forceRightToLeft
             } else {
                 rowStack.semanticContentAttribute = .forceLeftToRight
             }
 
+            let isSpacebarRow = row.contains("SPACE") || row.contains(" ")
+            rowStack.distribution = isSpacebarRow ? .fill : .fillEqually
+
+            var nonSpaceButtons = [UIButton]()
+
             for key in row {
                 let button = UIButton(type: .system)
                 
-                // Capitalization/Shift rendering logic for letters
                 var keyTitle = key
-                if !isBalorabi && !isShiftActive && key.count == 1 {
+                if keyboardLayoutMode == "balotin" && !isShiftActive && key.count == 1 {
                     keyTitle = key.lowercased()
                 }
                 
-                button.setTitle(keyTitle == " " ? "␣" : keyTitle, for: .normal) 
-                button.backgroundColor = customKeyBg
-                button.layer.cornerRadius = 8 // Matches premium rounded look!
-                button.layer.masksToBounds = true
-                button.setTitleColor(customTextColor, for: .normal)
+                // Set Spanned attributed text dynamically showing both main key and small crimson alternative!
+                let attributedTitle = getSpannedKeyText(mainKey: keyTitle, textColor: customTextColor)
+                button.setAttributedTitle(attributedTitle, for: .normal)
                 
-                // Load local Amiri font!
-                if let amiriFont = UIFont(name: "Amiri", size: 18) {
-                    button.titleLabel?.font = amiriFont
-                } else {
-                    button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+                button.backgroundColor = customKeyBg
+                button.layer.cornerRadius = 8 
+                button.layer.masksToBounds = true
+                
+                // Configure exact 40% Spacebar constraint in Swift!
+                if key == "SPACE" || key == " " {
+                    button.translatesAutoresizingMaskIntoConstraints = false
+                    button.widthAnchor.constraint(equalTo: rowStack.widthAnchor, multiplier: 0.40).isActive = true
+                } else if isSpacebarRow {
+                    nonSpaceButtons.append(button)
                 }
                 
-                button.addTarget(self, action: #selector(keyTapped(_:)), for: .touchUpInside)
-
-                let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-                button.addGestureRecognizer(longPress)
+                // AUTO-REPEAT BACKSPACE: If key is BACKSPACE, apply repeating action listeners!
+                if key == "BACKSPACE" {
+                    button.addTarget(self, action: #selector(backspaceDown), for: .touchDown)
+                    button.addTarget(self, action: #selector(backspaceUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+                } else {
+                    button.addTarget(self, action: #selector(keyTapped(_:)), for: .touchUpInside)
+                    let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+                    button.addGestureRecognizer(longPress)
+                }
 
                 rowStack.addArrangedSubview(button)
             }
+            
+            // Constrain remaining buttons in spacebar row to be divided equally!
+            if isSpacebarRow && nonSpaceButtons.count > 1 {
+                for i in 1..<nonSpaceButtons.count {
+                    nonSpaceButtons[i].widthAnchor.constraint(equalTo: nonSpaceButtons[0].widthAnchor).isActive = true
+                }
+            }
+            
             mainKeyboardStack.addArrangedSubview(rowStack)
+        }
+    }
+
+    @objc private func backspaceDown() {
+        self.textDocumentProxy.deleteBackward()
+        
+        // Play native iOS keypress delete click sound!
+        playNativeClickSound()
+
+        // Start continuous repeating timer after a 0.5 second initial holding delay
+        backspaceTimer?.invalidate()
+        backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.textDocumentProxy.deleteBackward()
+            self?.playNativeClickSound()
+        }
+    }
+
+    @objc private func backspaceUp() {
+        backspaceTimer?.invalidate()
+        backspaceTimer = nil
+    }
+
+    private func playNativeClickSound() {
+        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
+            let soundEnabled = defaults.bool(forKey: "flutter.kb_sound_enabled")
+            if soundEnabled {
+                UIDevice.current.playInputClick()
+            }
+        } else {
+            UIDevice.current.playInputClick() // Default to playing sound if prefs not created yet
         }
     }
 
@@ -236,32 +358,52 @@ class KeyboardViewController: UIInputViewController {
 
     private func handleKeyPress(_ key: String) {
         let proxy = self.textDocumentProxy as UITextDocumentProxy
+        
+        // Play native system keypress sound!
+        playNativeClickSound()
+
         switch key {
-        case "SPACE", " ":
+        case "SPACE", " ", "␣":
             proxy.insertText(" ")
             updatePredictions("")
-        case "⌫":
+        case "⌫", "BACKSPACE":
             proxy.deleteBackward()
             updatePredictions("")
-        case "⏎", "مان", "Màn":
+        case "⏎", "ENTER", "مان", "Màn":
             proxy.insertText("\n")
             updatePredictions("")
         case "🌐":
-            isBalorabi = !isBalorabi
+            keyboardLayoutMode = (keyboardLayoutMode == "balorabi") ? "balotin" : "balorabi"
             renderKeys()
-        case "⬆":
-            isShiftActive = !isShiftActive
+        case "ABC":
+            keyboardLayoutMode = "balotin"
+            renderKeys()
+        case "اب ...":
+            keyboardLayoutMode = "balorabi"
             renderKeys()
         case "؟۱۲۳", "?123":
-            break
+            keyboardLayoutMode = "symbols1"
+            renderKeys()
+        case "2/2 →":
+            keyboardLayoutMode = "symbols2"
+            renderKeys()
+        case "← 1/2":
+            keyboardLayoutMode = "symbols1"
+            renderKeys()
+        case "اب/ABC":
+            keyboardLayoutMode = isBalorabi ? "balorabi" : "balotin"
+            renderKeys()
+        case "SHIFT", "⬆":
+            isShiftActive = !isShiftActive
+            renderKeys()
+        case "ZWNJ":
+            proxy.insertText("\u{200C}") // Insert Zero Width Non-Joiner!
         default:
-            // Dynamic Shift Conversion before inserting
             var typedKey = key
-            if !isBalorabi && !isShiftActive && key.count == 1 {
+            if keyboardLayoutMode == "balotin" && !isShiftActive && key.count == 1 {
                 typedKey = key.lowercased()
             }
             
-            // Dynamic Contextual Ligature joining logic (Bari Ye 'ے' to 'ݔ' replacement)
             if let preceding = proxy.documentContextBeforeInput?.last, String(preceding) == "ے", !typedKey.isEmpty, !isPunctuation(typedKey) {
                 proxy.deleteBackward()
                 proxy.insertText("ݔ")
@@ -285,9 +427,10 @@ class KeyboardViewController: UIInputViewController {
         for alt in alternatives {
             alert.addAction(UIAlertAction(title: alt, style: .default, handler: { _ in
                 self.textDocumentProxy.insertText(alt)
-            }))
+                self.playNativeClickSound()
+              }))
         }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, nil))
 
         if let popoverController = alert.popoverPresentationController {
             popoverController.sourceView = button
@@ -304,7 +447,7 @@ class KeyboardViewController: UIInputViewController {
 
         if currentWord.isEmpty { return }
 
-        let activeVocab = isBalorabi ? balorabiVocab : balotinVocab
+        let activeVocab = (keyboardLayoutMode == "balorabi") ? balorabiVocab : balotinVocab
         let matches = activeVocab.filter { $0.hasPrefix(currentWord) }.prefix(3)
 
         for word in matches {
@@ -330,6 +473,7 @@ class KeyboardViewController: UIInputViewController {
         }
         proxy.insertText(word + " ")
         updatePredictions("")
+        playNativeClickSound()
     }
 
     private func updateClipboardSuggestion() {
@@ -344,6 +488,7 @@ class KeyboardViewController: UIInputViewController {
     @objc private func pasteFromClipboard() {
         if let clipboardText = UIPasteboard.general.string {
             self.textDocumentProxy.insertText(clipboardText)
+            playNativeClickSound()
         }
     }
 }
@@ -373,3 +518,4 @@ extension UIColor {
         )
     }
 }
+export template KeyboardViewController;

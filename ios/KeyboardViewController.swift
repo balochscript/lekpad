@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 
 class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
 
@@ -14,6 +15,10 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     private var keyTextColor: UIColor = .label
 
     private var backspaceTimer: Timer?
+    
+    private var audioPlayer: AVAudioPlayer?
+    private var soundVolume: Float = 0.5
+    private var isSoundEnabled: Bool = true
 
     var enableInputClicksWhenVisible: Bool {
         return true
@@ -81,6 +86,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadSoundSettings()
         setupTopBar()
         setupKeyboardRows()
         updateTheme()
@@ -90,6 +96,16 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         updateTheme()
+    }
+
+    private func loadSoundSettings() {
+        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
+            isSoundEnabled = defaults.bool(forKey: "flutter.kb_sound_enabled")
+            soundVolume = defaults.float(forKey: "flutter.kb_sound_volume")
+            if soundVolume == 0 {
+                soundVolume = 0.5
+            }
+        }
     }
 
     private func updateTheme() {
@@ -158,7 +174,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     }
 
     private func getSpannedKeyText(mainKey: String, textColor: UIColor) -> NSAttributedString {
-        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
+        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
             
             var displayLabel = mainKey
             if mainKey == "SPACE" || mainKey == " " {
@@ -171,6 +187,8 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                 displayLabel = "🌐"
             } else if mainKey == "SHIFT" {
                 displayLabel = "⬆"
+            } else if mainKey == "⚙️" {
+                displayLabel = "⚙️"
             }
             
             return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
@@ -211,8 +229,8 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
                     ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
-                    ["◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],
-                    ["؟۱۲۳", "GLOBE", "SPACE", "۔", "ENTER"]
+                    ["⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],
+                    ["؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"]
                 ]
             case "balotin":
                 return [
@@ -281,8 +299,20 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                 let attributedTitle = getSpannedKeyText(mainKey: keyTitle, textColor: customTextColor)
                 button.setAttributedTitle(attributedTitle, for: .normal)
                 
-                button.backgroundColor = customKeyBg
-                button.layer.cornerRadius = 8
+                let currentKeyBg: UIColor
+                switch key {
+                case "BACKSPACE", "⌫":
+                    currentKeyBg = UIColor(red: 0.5, green: 0.11, blue: 0.11, alpha: 1.0)
+                case "ENTER", "⏎":
+                    currentKeyBg = UIColor(red: 0.02, green: 0.31, blue: 0.23, alpha: 1.0)
+                case "⚙️":
+                    currentKeyBg = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1.0)
+                default:
+                    currentKeyBg = customKeyBg
+                }
+                
+                button.backgroundColor = currentKeyBg
+                button.layer.cornerRadius = 6
                 button.layer.masksToBounds = true
                 
                 if key == "SPACE" || key == " " {
@@ -343,6 +373,10 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         case "🌐":
             keyboardLayoutMode = (keyboardLayoutMode == "balorabi") ? "balotin" : "balorabi"
             renderKeys()
+        case "⚙️":
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                self.openURL(url)
+            }
         case "ABC":
             keyboardLayoutMode = "balotin"
             renderKeys()
@@ -409,7 +443,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             alert.addAction(action)
         }
         
-        alert.addAction(UIAlertAction(title: "لغو", style: .cancel))
+        alert.addAction(UIAlertAction(title: "بَججَگ", style: .cancel))
 
         if let popoverController = alert.popoverPresentationController {
             popoverController.sourceView = button
@@ -476,9 +510,16 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     }
 
     private func playNativeClickSound() {
-        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
-            let soundEnabled = defaults.bool(forKey: "flutter.kb_sound_enabled")
-            if soundEnabled {
+        if isSoundEnabled {
+            if let soundURL = Bundle.main.url(forResource: "key_click", withExtension: "mp3", subdirectory: "flutter_assets/assets/sounds") {
+                do {
+                    audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+                    audioPlayer?.volume = soundVolume
+                    audioPlayer?.play()
+                } catch {
+                    UIDevice.current.playInputClick()
+                }
+            } else {
                 UIDevice.current.playInputClick()
             }
         }
@@ -490,7 +531,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         playNativeClickSound()
         
         backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
-            self?.backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
                 self?.textDocumentProxy.deleteBackward()
                 self?.playNativeClickSound()
             }

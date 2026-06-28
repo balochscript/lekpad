@@ -25,6 +25,9 @@ class _LekpadAppState extends State<LekpadApp> {
   Color _keyBgColor = const Color(0xFF1E293B);
   Color _keyTextColor = Colors.white;
 
+  // Sound feedback toggle
+  bool _isSoundEnabled = true;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +40,7 @@ class _LekpadAppState extends State<LekpadApp> {
       _kbBgColor = Color(prefs.getInt('kb_bg_color') ?? 0xFF0F172A);
       _keyBgColor = Color(prefs.getInt('key_bg_color') ?? 0xFF1E293B);
       _keyTextColor = Color(prefs.getInt('key_text_color') ?? 0xFFFFFFFF);
+      _isSoundEnabled = prefs.getBool('kb_sound_enabled') ?? true;
     });
   }
 
@@ -76,6 +80,14 @@ class _LekpadAppState extends State<LekpadApp> {
       }
       _keyboardMode = mode;
     });
+  }
+
+  void _toggleSound(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isSoundEnabled = enabled;
+    });
+    await prefs.setBool('kb_sound_enabled', enabled);
   }
 
   void _updateCustomColors(Color bg, Color key, Color text) async {
@@ -141,7 +153,9 @@ class _LekpadAppState extends State<LekpadApp> {
         kbBgColor: _kbBgColor,
         keyBgColor: _keyBgColor,
         keyTextColor: _keyTextColor,
+        isSoundEnabled: _isSoundEnabled,
         onThemeChanged: _toggleTheme,
+        onSoundChanged: _toggleSound,
         onModeChanged: _setKeyboardMode,
         onColorsChanged: _updateCustomColors,
       ),
@@ -156,7 +170,9 @@ class KeyboardDashboard extends StatefulWidget {
   final Color kbBgColor;
   final Color keyBgColor;
   final Color keyTextColor;
+  final bool isSoundEnabled;
   final Function(bool) onThemeChanged;
+  final Function(bool) onSoundChanged;
   final Function(String) onModeChanged;
   final Function(Color, Color, Color) onColorsChanged;
 
@@ -168,7 +184,9 @@ class KeyboardDashboard extends StatefulWidget {
     required this.kbBgColor,
     required this.keyBgColor,
     required this.keyTextColor,
+    required this.isSoundEnabled,
     required this.onThemeChanged,
+    required this.onSoundChanged,
     required this.onModeChanged,
     required this.onColorsChanged,
   });
@@ -244,11 +262,12 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   }
 
   bool _isPunctuation(String char) {
-    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '='];
+    const punc = [' ', '\n', '،', '؟', '?', '.', ',', ':', ';', '"', '\'', '-', '_', '+', '×', '÷', '=', '۔', 'ـ', '\u200C'];
     return punc.contains(char);
   }
 
   // Automatic Contextual Ligature joining for 'ے' and 'ݔ'
+  // Also contains Intelligent Auto-ZWNJ conversion for "مایه ی" -> "مایه‌ی"
   void _insertText(String chars) {
     final text = _textController.text;
     final selection = _textController.selection;
@@ -262,6 +281,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       finalChars = chars.toLowerCase();
     }
 
+    // Intelligent Auto-ZWNJ logic: Convert "ه " + "ی" to "هـ‌ی"
+    if (selection.start > 1 && 
+        text[selection.start - 1] == ' ' && 
+        (text[selection.start - 2] == 'ه' || text[selection.start - 2] == 'ہ' || text[selection.start - 2] == 'ھ' || text[selection.start - 2] == 'ے') &&
+        chars == 'ی') {
+      modifiedText = text.replaceRange(selection.start - 1, selection.start, '\u200C');
+    }
+
     if (selection.start > 0 && text[selection.start - 1] == 'ے' && chars.isNotEmpty && !_isPunctuation(chars)) {
       modifiedText = text.replaceRange(selection.start - 1, selection.start, 'ݔ');
     }
@@ -269,6 +296,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     final newText = modifiedText.replaceRange(cursorOffset, selection.end, finalChars);
     _textController.text = newText;
     _textController.selection = TextSelection.collapsed(offset: cursorOffset + finalChars.length);
+    _playLocalClickSound();
+  }
+
+  // Plays click sound for on-screen simulator keyboard as well!
+  void _playLocalClickSound() {
+    if (widget.isSoundEnabled) {
+      SystemSound.play(SystemSoundType.click);
+    }
   }
 
   void _backspace() {
@@ -279,6 +314,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       _textController.text = newText;
       _textController.selection = TextSelection.collapsed(offset: selection.start - 1);
     }
+    _playLocalClickSound();
   }
 
   void _replaceLastWord(String word) {
@@ -290,6 +326,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     words.add(word);
     _textController.text = '${words.join(' ')} ';
     _textController.selection = TextSelection.collapsed(offset: _textController.text.length);
+    _playLocalClickSound();
   }
 
   String _getLocalizedText(String key) {
@@ -493,6 +530,31 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                       value: isDark,
                                       activeColor: accentGold,
                                       onChanged: widget.onThemeChanged,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Divider(height: 1),
+                              // Button Click Sound Toggle!
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.volume_up_outlined, color: accentGold),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'صدای کلیک دکمه (Button Sound)',
+                                          style: const TextStyle(fontFamily: 'Amiri', fontSize: 18, fontWeight: FontWeight.w500),
+                                        ),
+                                      ],
+                                    ),
+                                    Switch(
+                                      value: widget.isSoundEnabled,
+                                      activeColor: accentGold,
+                                      onChanged: widget.onSoundChanged,
                                     ),
                                   ],
                                 ),
@@ -708,31 +770,37 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         ? TextDirection.rtl
         : TextDirection.ltr;
 
-    return Directionality(
-      textDirection: kbDirection, // FIXED: Forces correct layout alignment regardless of app's global language!
-      child: Container(
-        color: keyboardBg,
-        padding: const EdgeInsets.only(top: 8, bottom: 16, left: 4, right: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPredictionBar(isDark, accentGold),
-            const SizedBox(height: 6),
+    return Container(
+      color: keyboardBg,
+      padding: const EdgeInsets.only(top: 8, bottom: 16, left: 4, right: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildPredictionBar(isDark, accentGold),
+          const SizedBox(height: 6),
 
-            ...layout.map((row) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2.5),
-                child: Row(
-                  children: row.map((key) {
-                    return Expanded(
+          ...layout.map((row) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2.5),
+              child: Row(
+                children: row.map((key) {
+                  // Calculate flex to make spacebar 40% of horizontal space!
+                  int flexValue = 1;
+                  if (key == 'SPACE') {
+                    flexValue = 3; // FIXED: Sets spacebar width to perfectly cover approximately 40% of screen width!
+                  }
+                  return Expanded(
+                    flex: flexValue,
+                    child: Directionality(
+                      textDirection: kbDirection,
                       child: _buildKeyWidget(key, isDark, accentGold, crimsonThread),
-                    );
-                  }).toList(),
-                ),
-              );
-            }),
-          ],
-        ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -810,7 +878,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     final hintColor = isDark ? const Color(0xFFFCA5A5) : crimsonThread;
 
     final hint = BalochiConfig.keyVisualAlternativeHints[key];
-    bool isSpecial = key == ' ' || key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC' || key == '⌫' || key == '⏎';
+    bool isSpecial = key == ' ' || key == 'SPACE' || key == 'BACKSPACE' || key == 'Pàk' || key == 'پاکے' || key == 'مان' || key == 'Màn' || key == '🌐' || key == 'ツ' || key == 'ツ Sym' || key == 'ABC' || key == 'اب ...' || key == '◀▶' || key == '⬆' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀' || key == 'اب/ABC' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC' || key == '⌫' || key == '⏎' || key == 'GLOBE' || key == 'ENTER' || key == 'ZWNJ';
 
     Color finalBg = keyBg;
     Widget keyLabel;
@@ -819,19 +887,18 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
       keyLabel = Container(
         height: 12,
-        width: 140, 
         decoration: BoxDecoration(
           color: isDark ? accentGold.withOpacity(0.5) : accentGold,
           borderRadius: BorderRadius.circular(2),
         ),
       );
-    } else if (key == '⌫' || key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
+    } else if (key == '⌫' || key == 'BACKSPACE' || key == 'پاکے' || key == 'Pàk') {
       finalBg = isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
       keyLabel = const Text(
         '⌫', 
         style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Colors.red, fontSize: 18),
       );
-    } else if (key == '⏎' || key == 'مان' || key == 'Màn') {
+    } else if (key == '⏎' || key == 'ENTER' || key == 'مان' || key == 'Màn') {
       finalBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
       keyLabel = const Text(
         '⏎', 
@@ -843,9 +910,15 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         key,
         style: const TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Color(0xFFD97706), fontSize: 16),
       );
-    } else if (key == '🌐') {
+    } else if (key == '🌐' || key == 'GLOBE') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       keyLabel = Icon(Icons.language, color: accentGold, size: 20); 
+    } else if (key == 'ZWNJ') {
+      finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+      keyLabel = const Text(
+        '‌', // Zero Width Non-Joiner (نیم‌فاصله) key label
+        style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 18),
+      );
     } else if (key == '← 1/2' || key == '2/2 →' || key == 'صفحہ ۱ ◀' || key == 'صفحہ ۲ ◀') {
       finalBg = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
       keyLabel = Text(
@@ -867,9 +940,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       onTap: () {
         if (key == ' ' || key == 'SPACE') {
           _insertText(' ');
-        } else if (key == '⌫' || key == 'پاکے' || key == 'Pàk' || key == 'BACKSPACE') {
+        } else if (key == '⌫' || key == 'BACKSPACE' || key == 'پاکے' || key == 'Pàk') {
           _backspace();
-        } else if (key == '⏎' || key == 'مان' || key == 'Màn') {
+        } else if (key == '⏎' || key == 'ENTER' || key == 'مان' || key == 'Màn') {
           _insertText('\n');
         } else if (key == '⬆') {
           setState(() {
@@ -879,7 +952,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           widget.onModeChanged('balotin');
         } else if (key == 'اب ...') {
           widget.onModeChanged('balorabi');
-        } else if (key == '🌐') {
+        } else if (key == '🌐' || key == 'GLOBE') {
           widget.onModeChanged(widget.previousScript == 'balorabi' ? 'balotin' : 'balorabi');
         } else if (key == '؟۱۲۳' || key == '?123') {
           widget.onModeChanged('symbols1'); 

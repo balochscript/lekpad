@@ -1,28 +1,24 @@
 import UIKit
 
-class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { // Conforms to audio feedback protocol!
+class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
 
-    private var keyboardLayoutMode: String = "balorabi" // "balorabi", "balotin", "symbols1", "symbols2"
+    private var keyboardLayoutMode: String = "balorabi"
     private var isShiftActive: Bool = false
 
     private var predictionBar: UIStackView!
     private var clipboardButton: UIButton!
     private var mainKeyboardStack: UIStackView!
 
-    // Custom coloring configuration (Synced from Flutter App Group)
     private var kbBgColor: UIColor = UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0)
     private var keyBgColor: UIColor = .systemBackground
     private var keyTextColor: UIColor = .label
 
-    // Timer for Swift Auto-Repeat Backspace on Long Press!
     private var backspaceTimer: Timer?
 
-    // Required protocol property to allow playing native input clicks
     var enableInputClicksWhenVisible: Bool {
         return true
     }
 
-    // Comprehensive standard dictionary strictly filtered (no ظطضصثقفغعخ)
     private let balorabiVocab = [
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
         "ڈُنگ", "ڈَل", "اِشک", "اݔدام", "بݔر", "اِسبݔت", "گَنش", "گُب", "گوارَگ", "ھئیک",
@@ -33,7 +29,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         "سَلام", "والِک", "چونَے", "چونے", "مَن", "وشوں", "تَو", "هَں", "چہ", "هال", "اِنت", 
         "وَش", "سَلامتے", "جۏڑی", "هَور", "جمبر", "استین", "استون", "گرند", "گُرۏک", "ترَمپ", 
         "ترۏنگل", "گوات", "سَنگُل", "سُهر", "بیر", "گوارَگ", "هار", "کَور", "شݔپ", "لوڈ", "لَهڈ", 
-        "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", 
+        "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", 
         "وَڈݔنَگ", "وَڈݔنۏک", "جۏڈݔنَگ", "جۏڈݔنۏک", "بَنݔنَگ", "بَنݔنۏک", "بَنݔنتگیں", "اَڈ", 
         "شَرر", "شؤک", "زَبَردَست"
     ]
@@ -52,24 +48,23 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast"
     ]
 
-    // Long press alternative letters mappings
     private let longPressMappings: [String: [String]] = [
-        "ت": ["ث", "ط"],
+        "ت": ["ث", "ط", "ّ"],
         "ج": ["ح"],
         "چ": ["خ"],
         "د": ["ذ"],
         "س": ["ص"],
         "ز": ["ض", "ظ"],
-        "ا": ["ع", "آ", "أ", "إ"],
+        "ا": ["ع", "آ", "أ", "إ", "َ", "ِ", "ُ"],
         "گ": ["غ"],
         "پ": ["ف"],
         "ک": ["ق"],
         "ھ": ["ہ", "هـ", "ح", "ه"], 
         "ء": ["ع", "ءَ", "ءِ", "ءُ"],
         "و": ["ۏ", "ؤ", "وْ", "وُ"],
-        "ۏ": ["و", "ؤ", "وْ", "وُ"],
+        "ۏ": ["ۇ", "و", "ؤ", "وْ", "وُ"],
         "ی": ["ݔ", "ے", "یْ", "یٰ", "ئ"],
-        "ن": ["ں", "نٚ"],
+        "ن": ["ں", "نٚ", "ْ"],
         "ر": ["ڑ"],
         "ژ": ["ظ"],
         "۔": ["ـ", "—", "-"], 
@@ -104,6 +99,14 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
             } else {
                 let isDark = self.traitCollection.userInterfaceStyle == .dark
                 self.view.backgroundColor = isDark ? UIColor(red: 0.11, green: 0.15, blue: 0.21, alpha: 1.0) : UIColor(red: 0.92, green: 0.93, blue: 0.95, alpha: 1.0)
+            }
+            
+            if let keyBgHex = defaults.string(forKey: "flutter.key_bg_color_hex") {
+                keyBgColor = UIColor(hex: keyBgHex)
+            }
+            
+            if let keyTextHex = defaults.string(forKey: "flutter.key_text_color_hex") {
+                keyTextColor = UIColor(hex: keyTextHex)
             }
         }
     }
@@ -154,7 +157,6 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         renderKeys()
     }
 
-    // High-fidelity rich text formatter (large main character in center, small red hint on top-right!)
     private func getSpannedKeyText(mainKey: String, textColor: UIColor) -> NSAttributedString {
         if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
             
@@ -188,8 +190,8 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         
         let hintAttributedString = NSAttributedString(string: hint, attributes: [
             .font: hintFont,
-            .foregroundColor: UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1.0), // Crimson Red
-            .baselineOffset: 8 // Superscript effect!
+            .foregroundColor: UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1.0),
+            .baselineOffset: 8
         ])
         
         attributedString.append(hintAttributedString)
@@ -228,7 +230,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
                     ["2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"],
                     ["اب/ABC", "SPACE", "ENTER"]
                 ]
-            default: // "symbols2"
+            default:
                 return [
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"],
@@ -276,15 +278,13 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
                     keyTitle = key.lowercased()
                 }
                 
-                // Set Spanned attributed text dynamically showing both main key and small crimson alternative!
                 let attributedTitle = getSpannedKeyText(mainKey: keyTitle, textColor: customTextColor)
                 button.setAttributedTitle(attributedTitle, for: .normal)
                 
                 button.backgroundColor = customKeyBg
-                button.layer.cornerRadius = 8 
+                button.layer.cornerRadius = 8
                 button.layer.masksToBounds = true
                 
-                // Configure exact 40% Spacebar constraint in Swift!
                 if key == "SPACE" || key == " " {
                     button.translatesAutoresizingMaskIntoConstraints = false
                     button.widthAnchor.constraint(equalTo: rowStack.widthAnchor, multiplier: 0.40).isActive = true
@@ -292,7 +292,6 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
                     nonSpaceButtons.append(button)
                 }
                 
-                // AUTO-REPEAT BACKSPACE: If key is BACKSPACE, apply repeating action listeners!
                 if key == "BACKSPACE" {
                     button.addTarget(self, action: #selector(backspaceDown), for: .touchDown)
                     button.addTarget(self, action: #selector(backspaceUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
@@ -305,7 +304,6 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
                 rowStack.addArrangedSubview(button)
             }
             
-            // Constrain remaining buttons in spacebar row to be divided equally!
             if isSpacebarRow && nonSpaceButtons.count > 1 {
                 for i in 1..<nonSpaceButtons.count {
                     nonSpaceButtons[i].widthAnchor.constraint(equalTo: nonSpaceButtons[0].widthAnchor).isActive = true
@@ -322,14 +320,14 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
     }
 
     @objc private func keyTapped(_ sender: UIButton) {
-        guard let key = sender.titleLabel?.text else { return }
+        guard let keyText = sender.currentAttributedTitle?.string ?? sender.titleLabel?.text else { return }
+        let key = keyText.components(separatedBy: " ").first ?? keyText
         handleKeyPress(key == "␣" ? " " : key)
     }
 
     private func handleKeyPress(_ key: String) {
         let proxy = self.textDocumentProxy as UITextDocumentProxy
         
-        // Play native system keypress sound!
         playNativeClickSound()
 
         switch key {
@@ -361,13 +359,14 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
             keyboardLayoutMode = "symbols1"
             renderKeys()
         case "اب/ABC":
-            keyboardLayoutMode = isBalorabi ? "balorabi" : "balotin"
+            let isBalorabi = (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2")
+            keyboardLayoutMode = isBalorabi ? "balotin" : "balorabi"
             renderKeys()
         case "SHIFT", "⬆":
             isShiftActive = !isShiftActive
             renderKeys()
-        case "ZWNJ":
-            proxy.insertText("\u{200C}") // Insert Zero Width Non-Joiner!
+        case "◀▶":
+            proxy.insertText("\u{200C}")
         default:
             var typedKey = key
             if keyboardLayoutMode == "balotin" && !isShiftActive && key.count == 1 {
@@ -389,24 +388,34 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began,
               let button = gesture.view as? UIButton,
-              let key = button.titleLabel?.text,
+              let mainText = button.currentAttributedTitle?.string ?? button.titleLabel?.text,
+              let key = mainText.components(separatedBy: " ").first,
               let alternatives = longPressMappings[key == "␣" ? " " : key] else { return }
 
-        let alert = UIAlertController(title: "Variations", message: nil, preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        
+        alert.view.tintColor = UIColor(hex: "#D97706")
         
         for alt in alternatives {
-            alert.addAction(UIAlertAction(title: alt, style: .default, handler: { _ in
+            let action = UIAlertAction(title: alt, style: .default) { _ in
                 self.textDocumentProxy.insertText(alt)
                 self.playNativeClickSound()
-              }))
+            }
+            
+            if let amiriFont = UIFont(name: "Amiri", size: 20) {
+                action.setValue(amiriFont, forKey: "titleTextFont")
+            }
+            
+            alert.addAction(action)
         }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil)) // FIXED: Named the handler: argument!
+        
+        alert.addAction(UIAlertAction(title: "لغو", style: .cancel))
 
         if let popoverController = alert.popoverPresentationController {
             popoverController.sourceView = button
             popoverController.sourceRect = button.bounds
         }
-        self.present(alert, animated: true, completion: nil)
+        self.present(alert, animated: true)
     }
 
     private func updatePredictions(_ currentWord: String) {
@@ -418,7 +427,11 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         if currentWord.isEmpty { return }
 
         let activeVocab = (keyboardLayoutMode == "balorabi") ? balorabiVocab : balotinVocab
-        let matches = activeVocab.filter { $0.hasPrefix(currentWord) }.prefix(3)
+        let normalizedCurrentWord = currentWord.replacingOccurrences(of: "ݔ", with: "ے")
+        let matches = activeVocab.filter { 
+            let normalizedWord = $0.replacingOccurrences(of: "ݔ", with: "ے")
+            return normalizedWord.hasPrefix(normalizedCurrentWord)
+        }.prefix(3)
 
         for word in matches {
             let button = UIButton(type: .system)
@@ -461,30 +474,60 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
             playNativeClickSound()
         }
     }
+
+    private func playNativeClickSound() {
+        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
+            let soundEnabled = defaults.bool(forKey: "flutter.kb_sound_enabled")
+            if soundEnabled {
+                UIDevice.current.playInputClick()
+            }
+        }
+    }
+
+    @objc private func backspaceDown() {
+        backspaceTimer?.invalidate()
+        textDocumentProxy.deleteBackward()
+        playNativeClickSound()
+        
+        backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            self?.backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                self?.textDocumentProxy.deleteBackward()
+                self?.playNativeClickSound()
+            }
+        }
+    }
+
+    @objc private func backspaceUp() {
+        backspaceTimer?.invalidate()
+        backspaceTimer = nil
+    }
 }
 
-// Swift helper extension for hex string to UIColor parsing
 extension UIColor {
     convenience init(hex: String) {
         var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        
         if (cString.hasPrefix("#")) {
             cString.remove(at: cString.startIndex)
         }
-        if ((cString.count) != 8 && (cString.count) != 6) {
+        
+        if cString.count == 8 {
+            cString = String(cString.suffix(6))
+        }
+        
+        if cString.count != 6 {
             self.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
             return
         }
-        if (cString.count == 8) {
-            cString.remove(at: cString.startIndex)
-            cString.remove(at: cString.startIndex) 
-        }
+        
         var rgbValue: UInt64 = 0
         Scanner(string: cString).scanHexInt64(&rgbValue)
+        
         self.init(
             red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
             green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
             blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
-            alpha: CGFloat(1.0)
+            alpha: 1.0
         )
     }
 }

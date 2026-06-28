@@ -518,4 +518,3 @@ extension UIColor {
         )
     }
 }
-export template KeyboardViewController;

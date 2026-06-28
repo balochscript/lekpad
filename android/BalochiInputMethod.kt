@@ -3,12 +3,15 @@ package bc.lekpad.balochi
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
 import android.media.AudioManager
+import android.media.SoundPool
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
@@ -47,10 +50,14 @@ class BalochiInputMethod : InputMethodService() {
         override fun run() {
             val ic = currentInputConnection
             ic?.deleteSurroundingText(1, 0)
-            playKeyPressSound(AudioManager.FX_KEYPRESS_DELETE)
-            backspaceHandler?.postDelayed(this, 100)
+            playKeyPressSound()
+            backspaceHandler?.postDelayed(this, 50)
         }
     }
+
+    private var soundPool: SoundPool? = null
+    private var soundId: Int = -1
+    private var soundVolume: Float = 0.5f
 
     private val balorabiVocab = listOf(
         "اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج",
@@ -112,6 +119,30 @@ class BalochiInputMethod : InputMethodService() {
         "z" to listOf("ž")
     )
 
+    override fun onCreate() {
+        super.onCreate()
+        initSoundPool()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        soundPool?.release()
+        soundPool = null
+    }
+
+    private fun initSoundPool() {
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .build()
+        
+        try {
+            val afd = assets.openFd("flutter_assets/assets/sounds/key_click.mp3")
+            soundId = soundPool?.load(afd, 1) ?: -1
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onCreateInputView(): View {
         val currentNightMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
         isNightMode = currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -161,17 +192,20 @@ class BalochiInputMethod : InputMethodService() {
             if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
         }
 
+        soundVolume = prefs.getFloat("flutter.kb_sound_volume", 0.5f)
+
         keyboardView.setBackgroundColor(kbBgColor)
     }
 
     private fun getSpannedKeyText(mainKey: String): CharSequence {
-        if (mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn") {
+        if (mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" || mainKey == "⚙️") {
             return when (mainKey) {
                 "SPACE", " " -> "␣"
                 "BACKSPACE" -> "⌫"
                 "ENTER" -> "⏎"
                 "GLOBE" -> "🌐"
                 "SHIFT" -> "⬆"
+                "⚙️" -> "⚙️"
                 else -> mainKey
             }
         }
@@ -200,8 +234,8 @@ class BalochiInputMethod : InputMethodService() {
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
                 listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
-                listOf("◀▶", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"),
-                listOf("؟۱۲۳", "GLOBE", "SPACE", "۔", "ENTER")
+                listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"),
+                listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER")
             )
             "balotin" -> listOf(
                 listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
@@ -227,7 +261,7 @@ class BalochiInputMethod : InputMethodService() {
         }
 
         val density = resources.displayMetrics.density
-        val keyHeightPx = (45 * density).toInt()
+        val keyHeightPx = (48 * density).toInt()
 
         val isRtlMode = (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2")
 
@@ -253,13 +287,20 @@ class BalochiInputMethod : InputMethodService() {
                     setTextColor(keyTextColor)
                     setPadding(0, 0, 0, 0)
                     
+                    val currentKeyBg = when (key) {
+                        "BACKSPACE", "⌫" -> if (isNightMode) 0xFF7F1D1D.toInt() else 0xFFFEE2E2.toInt()
+                        "ENTER", "⏎" -> if (isNightMode) 0xFF064E3B.toInt() else 0xFFD1FAE5.toInt()
+                        "⚙️" -> if (isNightMode) 0xFF475569.toInt() else 0xFFE2E8F0.toInt()
+                        else -> keyBgColor
+                    }
+                    
                     val keyDrawable = GradientDrawable().apply {
-                        setColor(keyBgColor)
-                        cornerRadius = 16f
+                        setColor(currentKeyBg)
+                        cornerRadius = 8f
                         setStroke(1, 0x1A000000) 
                     }
                     background = keyDrawable
-                    elevation = 4f 
+                    elevation = 2f 
                     
                     if (amiriTypeface != null) {
                         typeface = amiriTypeface
@@ -268,7 +309,7 @@ class BalochiInputMethod : InputMethodService() {
                     val weight = if (key == " " || key == "SPACE") 3.0f else 1.0f
                     
                     layoutParams = LinearLayout.LayoutParams(0, keyHeightPx, weight).apply {
-                        setMargins((2 * density).toInt(), (3 * density).toInt(), (2 * density).toInt(), (3 * density).toInt())
+                        setMargins((2 * density).toInt(), (2 * density).toInt(), (2 * density).toInt(), (2 * density).toInt())
                     }
 
                     if (key == "BACKSPACE") {
@@ -279,7 +320,7 @@ class BalochiInputMethod : InputMethodService() {
                                         val ic = currentInputConnection
                                         ic?.deleteSurroundingText(1, 0)
                                         
-                                        playKeyPressSound(AudioManager.FX_KEYPRESS_DELETE)
+                                        playKeyPressSound()
                                         
                                         if (backspaceHandler == null) {
                                             backspaceHandler = Handler(Looper.getMainLooper())
@@ -314,23 +355,19 @@ class BalochiInputMethod : InputMethodService() {
         return punc.contains(char)
     }
 
-    private fun playKeyPressSound(effectType: Int) {
+    private fun playKeyPressSound() {
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val soundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
-        if (soundEnabled) {
-            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            am.playSoundEffect(effectType)
+        val soundEnabled = prefs.getBool("flutter.kb_sound_enabled", true)
+        
+        if (soundEnabled && soundId != -1) {
+            soundPool?.play(soundId, soundVolume, soundVolume, 1, 0, 1.0f)
         }
     }
 
     private fun handleKeyPress(key: String) {
         val ic: InputConnection = currentInputConnection ?: return
         
-        when (key) {
-            "SPACE", " " -> playKeyPressSound(AudioManager.FX_KEYPRESS_SPACEBAR)
-            "ENTER", "⏎" -> playKeyPressSound(AudioManager.FX_KEYPRESS_RETURN)
-            else -> playKeyPressSound(AudioManager.FX_KEYPRESS_STANDARD)
-        }
+        playKeyPressSound()
 
         when (key) {
             "SPACE", " " -> {
@@ -348,6 +385,11 @@ class BalochiInputMethod : InputMethodService() {
             "GLOBE" -> {
                 keyboardLayoutMode = if (keyboardLayoutMode == "balorabi") "balotin" else "balorabi"
                 setupKeyboardLayout()
+            }
+            "⚙️" -> {
+                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
             }
             "ABC" -> {
                 keyboardLayoutMode = "balotin"
@@ -393,8 +435,9 @@ class BalochiInputMethod : InputMethodService() {
                 }
                 
                 ic.commitText(typedKey, 1)
-                val currentWord = ic.getTextBeforeCursor(10, 0)?.split(" ")?.lastOrNull() ?: ""
-                updateWordPredictions(currentWord.toString())
+                
+                val currentWord = ic.getTextBeforeCursor(20, 0)?.split(" ")?.lastOrNull() ?: ""
+                updateWordPredictions(currentWord)
             }
         }
     }
@@ -417,7 +460,7 @@ class BalochiInputMethod : InputMethodService() {
         for (alt in alternatives) {
             val altButton = Button(this).apply {
                 text = alt
-                textSize = 18f
+                textSize = 20f
                 setTextColor(keyTextColor)
                 if (amiriTypeface != null) {
                     typeface = amiriTypeface
@@ -429,11 +472,12 @@ class BalochiInputMethod : InputMethodService() {
                     setStroke(2, 0xFFD97706.toInt())
                 }
                 background = buttonDrawable
-                setPadding(20, 10, 20, 10)
+                setPadding(24, 12, 24, 12)
                 
                 setOnClickListener {
                     val ic: InputConnection = currentInputConnection
                     ic.commitText(alt, 1)
+                    playKeyPressSound()
                     popupWindow.dismiss()
                 }
             }
@@ -475,6 +519,7 @@ class BalochiInputMethod : InputMethodService() {
         val ic: InputConnection = currentInputConnection ?: return
         ic.deleteSurroundingText(oldWord.length, 0)
         ic.commitText("$newWord ", 1)
+        playKeyPressSound()
         updateWordPredictions("")
     }
 
@@ -497,6 +542,7 @@ class BalochiInputMethod : InputMethodService() {
                     setOnClickListener {
                         val ic: InputConnection = currentInputConnection
                         ic.commitText(clipText, 1)
+                        playKeyPressSound()
                     }
                 }
                 clipboardBar.addView(clipView)

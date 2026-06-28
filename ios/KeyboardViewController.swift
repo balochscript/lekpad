@@ -38,7 +38,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         "شَرر", "شؤک", "زَبَردَست"
     ]
 
-    private let balotinVocab = [
+    private let balotinVocab = [ 
         "Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj",
         "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik",
         "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag",
@@ -316,36 +316,6 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
         }
     }
 
-    @objc private func backspaceDown() {
-        self.textDocumentProxy.deleteBackward()
-        
-        // Play native iOS keypress delete click sound!
-        playNativeClickSound()
-
-        // Start continuous repeating timer after a 0.5 second initial holding delay
-        backspaceTimer?.invalidate()
-        backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            self?.textDocumentProxy.deleteBackward()
-            self?.playNativeClickSound()
-        }
-    }
-
-    @objc private func backspaceUp() {
-        backspaceTimer?.invalidate()
-        backspaceTimer = nil
-    }
-
-    private func playNativeClickSound() {
-        if let defaults = UserDefaults(suiteName: "group.bc.lekpad.balochi") {
-            let soundEnabled = defaults.bool(forKey: "flutter.kb_sound_enabled")
-            if soundEnabled {
-                UIDevice.current.playInputClick()
-            }
-        } else {
-            UIDevice.current.playInputClick() // Default to playing sound if prefs not created yet
-        }
-    }
-
     private func isPunctuation(_ char: String) -> Bool {
         let punc = [" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=", "۔", "ـ"]
         return punc.contains(char)
@@ -430,7 +400,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback { 
                 self.playNativeClickSound()
               }))
         }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil)) // FIXED: Named the handler: argument!
 
         if let popoverController = alert.popoverPresentationController {
             popoverController.sourceView = button

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'balochi_keyboard_config.dart';
 
 void main() {
@@ -25,6 +26,7 @@ class _LekpadAppState extends State<LekpadApp> {
   Color _keyTextColor = Colors.white;
 
   bool _isSoundEnabled = true;
+  double _soundVolume = 0.5;
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _LekpadAppState extends State<LekpadApp> {
       _keyBgColor = Color(prefs.getInt('key_bg_color') ?? 0xFF1E293B);
       _keyTextColor = Color(prefs.getInt('key_text_color') ?? 0xFFFFFFFF);
       _isSoundEnabled = prefs.getBool('kb_sound_enabled') ?? true;
+      _soundVolume = prefs.getDouble('kb_sound_volume') ?? 0.5;
     });
   }
 
@@ -85,6 +88,14 @@ class _LekpadAppState extends State<LekpadApp> {
       _isSoundEnabled = enabled;
     });
     await prefs.setBool('kb_sound_enabled', enabled);
+  }
+
+  void _updateSoundVolume(double volume) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _soundVolume = volume;
+    });
+    await prefs.setDouble('kb_sound_volume', volume);
   }
 
   void _updateCustomColors(Color bg, Color key, Color text) async {
@@ -149,8 +160,10 @@ class _LekpadAppState extends State<LekpadApp> {
         keyBgColor: _keyBgColor,
         keyTextColor: _keyTextColor,
         isSoundEnabled: _isSoundEnabled,
+        soundVolume: _soundVolume,
         onThemeChanged: _toggleTheme,
         onSoundChanged: _toggleSound,
+        onVolumeChanged: _updateSoundVolume,
         onModeChanged: _setKeyboardMode,
         onColorsChanged: _updateCustomColors,
       ),
@@ -166,8 +179,10 @@ class KeyboardDashboard extends StatefulWidget {
   final Color keyBgColor;
   final Color keyTextColor;
   final bool isSoundEnabled;
+  final double soundVolume;
   final Function(bool) onThemeChanged;
   final Function(bool) onSoundChanged;
+  final Function(double) onVolumeChanged;
   final Function(String) onModeChanged;
   final Function(Color, Color, Color) onColorsChanged;
 
@@ -180,8 +195,10 @@ class KeyboardDashboard extends StatefulWidget {
     required this.keyBgColor,
     required this.keyTextColor,
     required this.isSoundEnabled,
+    required this.soundVolume,
     required this.onThemeChanged,
     required this.onSoundChanged,
+    required this.onVolumeChanged,
     required this.onModeChanged,
     required this.onColorsChanged,
   });
@@ -202,6 +219,8 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   List<String> _longPressAlternatives = [];
   Offset? _longPressPosition;
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   @override
   void initState() {
     super.initState();
@@ -213,6 +232,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   void dispose() {
     _textController.removeListener(_onTextChanged);
     _textController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -289,9 +309,15 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     _playLocalClickSound();
   }
 
-  void _playLocalClickSound() {
+  void _playLocalClickSound() async {
     if (widget.isSoundEnabled) {
-      SystemSound.play(SystemSoundType.click);
+      try {
+        await _audioPlayer.stop();
+        await _audioPlayer.setVolume(widget.soundVolume);
+        await _audioPlayer.play(AssetSource('sounds/key_click.mp3'));
+      } catch (e) {
+        SystemSound.play(SystemSoundType.click);
+      }
     }
   }
 
@@ -521,24 +547,49 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                               const Divider(height: 1),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Icon(Icons.volume_up, color: accentGold),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          _getLocalizedText('sound_enabled'),
-                                          style: const TextStyle(fontFamily: 'Amiri', fontSize: 18, fontWeight: FontWeight.w500),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.volume_up, color: accentGold),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              _getLocalizedText('sound_enabled'),
+                                              style: const TextStyle(fontFamily: 'Amiri', fontSize: 18, fontWeight: FontWeight.w500),
+                                            ),
+                                          ],
+                                        ),
+                                        Switch(
+                                          value: widget.isSoundEnabled,
+                                          activeColor: accentGold,
+                                          onChanged: widget.onSoundChanged,
                                         ),
                                       ],
                                     ),
-                                    Switch(
-                                      value: widget.isSoundEnabled,
-                                      activeColor: accentGold,
-                                      onChanged: widget.onSoundChanged,
-                                    ),
+                                    if (widget.isSoundEnabled) ...[
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.volume_down, size: 18, color: accentGold.withOpacity(0.7)),
+                                          Expanded(
+                                            child: Slider(
+                                              value: widget.soundVolume,
+                                              min: 0.0,
+                                              max: 1.0,
+                                              divisions: 10,
+                                              activeColor: accentGold,
+                                              label: '${(widget.soundVolume * 100).toInt()}%',
+                                              onChanged: widget.onVolumeChanged,
+                                            ),
+                                          ),
+                                          Icon(Icons.volume_up, size: 18, color: accentGold),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -694,7 +745,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
         await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('$label انتخاب رنگ', style: const TextStyle(fontFamily: 'Amiri')),
+            title: Text(_getLocalizedText('color_picker_title'), style: const TextStyle(fontFamily: 'Amiri')),
             content: SingleChildScrollView(
               child: ColorPicker(
                 pickerColor: currentColor,
@@ -710,14 +761,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('لغو', style: TextStyle(fontFamily: 'Amiri')),
+                child: Text(_getLocalizedText('cancel'), style: const TextStyle(fontFamily: 'Amiri')),
               ),
               TextButton(
                 onPressed: () {
                   onSelect(pickedColor);
                   Navigator.of(context).pop();
                 },
-                child: const Text('تایید', style: TextStyle(fontFamily: 'Amiri')),
+                child: Text(_getLocalizedText('confirm'), style: const TextStyle(fontFamily: 'Amiri')),
               ),
             ],
           ),
@@ -893,7 +944,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     final textColor = widget.keyTextColor;
 
     final hint = BalochiConfig.keyVisualAlternativeHints[key];
-    bool isSpecial = key == ' ' || key == '⌫' || key == '⏎' || key == '🌐' || key == '⬆' || key == '◀▶' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC' || key == 'Màn';
+    bool isSpecial = key == ' ' || key == '⌫' || key == '⏎' || key == '🌐' || key == '⬆' || key == '◀▶' || key == '⚙️' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC' || key == 'Màn' || key == 'مان';
 
     Color finalBg = keyBg;
     Widget keyLabel;
@@ -910,7 +961,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     } else if (key == '⌫') {
       finalBg = isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
       keyLabel = Icon(Icons.backspace_outlined, color: textColor, size: 20);
-    } else if (key == '⏎' || key == 'Màn') {
+    } else if (key == '⏎' || key == 'Màn' || key == 'مان') {
       finalBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
       keyLabel = Icon(Icons.keyboard_return, color: textColor, size: 20);
     } else if (key == '؟۱۲۳' || key == '?123') {
@@ -922,6 +973,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     } else if (key == '🌐') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       keyLabel = Icon(Icons.language, color: textColor, size: 20); 
+    } else if (key == '⚙️') {
+      finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+      keyLabel = Icon(Icons.settings, color: accentGold, size: 20);
     } else if (key == '◀▶') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       keyLabel = Text(
@@ -960,7 +1014,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           _insertText(' ');
         } else if (key == '⌫') {
           _backspace();
-        } else if (key == '⏎' || key == 'Màn') {
+        } else if (key == '⏎' || key == 'Màn' || key == 'مان') {
           _insertText('\n');
         } else if (key == '⬆') {
           setState(() {
@@ -968,6 +1022,8 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           });
         } else if (key == '🌐') {
           widget.onModeChanged(widget.previousScript == 'balorabi' ? 'balotin' : 'balorabi');
+        } else if (key == '⚙️') {
+          _enableKeyboard();
         } else if (key == '؟۱۲۳' || key == '?123') {
           widget.onModeChanged('symbols1'); 
         } else if (key == '2/2 →') {

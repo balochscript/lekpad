@@ -337,6 +337,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       debugPrint("Failed to open keyboard picker: '${e.message}'.");
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.themeMode == ThemeMode.dark || 
@@ -344,7 +345,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     final textDirection = widget.previousScript == 'balorabi' ? TextDirection.rtl : TextDirection.ltr;
 
     final accentGold = const Color(0xFFD97706);
-    final crimsonThread = const Color(0xFFDC2626);
 
     return Scaffold(
       appBar: AppBar(
@@ -464,14 +464,14 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                         const SizedBox(height: 8),
                         _buildSettingButton(
                           context,
-                          icon: Icons.keyboard_capslock,
+                          icon: Icons.keyboard,
                           title: _getLocalizedText('enable_keyboard'),
                           accentGold: accentGold,
                           onTap: _enableKeyboard, 
                         ),
                         _buildSettingButton(
                           context,
-                          icon: Icons.touch_app_outlined,
+                          icon: Icons.touch_app,
                           title: _getLocalizedText('choose_keyboard'),
                           accentGold: accentGold,
                           onTap: _chooseKeyboard, 
@@ -526,7 +526,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                   children: [
                                     Row(
                                       children: [
-                                        Icon(Icons.volume_up_outlined, color: accentGold),
+                                        Icon(Icons.volume_up, color: accentGold),
                                         const SizedBox(width: 12),
                                         Text(
                                           _getLocalizedText('sound_enabled'),
@@ -613,7 +613,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                   ),
                 ),
 
-                _buildKeyboardUI(isDark, accentGold, crimsonThread),
+                _buildKeyboardUI(isDark, accentGold),
               ],
             ),
 
@@ -702,6 +702,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                   pickedColor = color;
                 },
                 pickerAreaHeightPercent: 0.8,
+                displayThumbColor: true,
+                showLabel: true,
+                paletteType: PaletteType.hsvWithHue,
               ),
             ),
             actions: [
@@ -765,7 +768,8 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       ),
     );
   }
-  Widget _buildKeyboardUI(bool isDark, Color accentGold, Color crimsonThread) {
+
+  Widget _buildKeyboardUI(bool isDark, Color accentGold) {
     final keyboardBg = widget.kbBgColor;
     
     List<List<String>> layout;
@@ -805,7 +809,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     flex: flexValue,
                     child: Directionality(
                       textDirection: kbDirection,
-                      child: _buildKeyWidget(key, isDark, accentGold, crimsonThread),
+                      child: _buildKeyWidget(key, isDark, accentGold),
                     ),
                   );
                 }).toList(),
@@ -841,11 +845,11 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     const SizedBox(width: 4),
                     Text(
                       _clipboardText.length > 8 ? '${_clipboardText.substring(0, 6)}...' : _clipboardText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Amiri',
                         fontSize: 12, 
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: widget.keyTextColor,
                       ),
                     )
                   ],
@@ -884,10 +888,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     );
   }
 
-  Widget _buildKeyWidget(String key, bool isDark, Color accentGold, Color crimsonThread) {
+  Widget _buildKeyWidget(String key, bool isDark, Color accentGold) {
     final keyBg = widget.keyBgColor;
     final textColor = widget.keyTextColor;
-    final hintColor = isDark ? const Color(0xFFFCA5A5) : crimsonThread;
 
     final hint = BalochiConfig.keyVisualAlternativeHints[key];
     bool isSpecial = key == ' ' || key == '⌫' || key == '⏎' || key == '🌐' || key == '⬆' || key == '◀▶' || key == '؟۱۲۳' || key == '?123' || key == '← 1/2' || key == '2/2 →' || key == 'اب/ABC' || key == 'Màn';
@@ -906,10 +909,10 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       );
     } else if (key == '⌫') {
       finalBg = isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
-      keyLabel = Icon(Icons.backspace_outlined, color: Colors.red, size: 20);
+      keyLabel = Icon(Icons.backspace_outlined, color: textColor, size: 20);
     } else if (key == '⏎' || key == 'Màn') {
       finalBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
-      keyLabel = Icon(Icons.keyboard_return, color: Colors.green, size: 20);
+      keyLabel = Icon(Icons.keyboard_return, color: textColor, size: 20);
     } else if (key == '؟۱۲۳' || key == '?123') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       keyLabel = Text(
@@ -918,12 +921,12 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
       );
     } else if (key == '🌐') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-      keyLabel = Icon(Icons.language, color: accentGold, size: 20); 
+      keyLabel = Icon(Icons.language, color: textColor, size: 20); 
     } else if (key == '◀▶') {
       finalBg = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-      keyLabel = const Text(
+      keyLabel = Text(
         '◀▶', 
-        style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, fontSize: 16),
+        style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
       );
     } else if (key == '← 1/2' || key == '2/2 →') {
       finalBg = isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1);
@@ -1021,7 +1024,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                     fontFamily: 'Amiri',
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: hintColor,
+                    color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
                   ),
                 ),
               ),

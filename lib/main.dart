@@ -312,7 +312,9 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   void _playLocalClickSound() async {
     if (widget.isSoundEnabled) {
       try {
-        await _audioPlayer.stop();
+        if (_audioPlayer.state == PlayerState.playing) {
+          await _audioPlayer.stop();
+        }
         await _audioPlayer.setVolume(widget.soundVolume);
         await _audioPlayer.play(AssetSource('sounds/key_click.mp3'));
       } catch (e) {
@@ -351,16 +353,16 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   Future<void> _enableKeyboard() async {
     try {
       await _settingsChannel.invokeMethod('openKeyboardSettings');
-    } on PlatformException catch (e) {
-      debugPrint("Failed to open keyboard settings: '${e.message}'.");
+    } catch (e) {
+      debugPrint("Failed to open keyboard settings: $e");
     }
   }
 
   Future<void> _chooseKeyboard() async {
     try {
       await _settingsChannel.invokeMethod('openKeyboardPicker');
-    } on PlatformException catch (e) {
-      debugPrint("Failed to open keyboard picker: '${e.message}'.");
+    } catch (e) {
+      debugPrint("Failed to open keyboard picker: $e");
     }
   }
 
@@ -391,7 +393,6 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
           ),
           IconButton(
             icon: const Icon(Icons.swap_horizontal_circle_outlined),
-            tooltip: _getLocalizedText('select_script'),
             onPressed: () {
               widget.onModeChanged(widget.previousScript == 'balorabi' ? 'balotin' : 'balorabi');
             },
@@ -599,7 +600,7 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      'کیبورڈءِ رنگبندی (Custom Key Colors)',
+                                      'کیبورڈءِ رنگبندی',
                                       style: const TextStyle(fontFamily: 'Amiri', fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
                                     ),
                                     const SizedBox(height: 8),

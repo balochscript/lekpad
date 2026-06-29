@@ -35,11 +35,11 @@ jobs:
       - name: Scaffold Flutter project
         run: |
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
-          mv lib/* temp_custom/lib/ 2>/dev/null || true
-          mv android/* temp_custom/android/ 2>/dev/null || true
-          mv ios/* temp_custom/ios/ 2>/dev/null || true
-          mv scripts/* temp_custom/scripts/ 2>/dev/null || true
-          mv images/* temp_custom/images/ 2>/dev/null || true
+          mv lib/* temp_custom/lib/
+          mv android/* temp_custom/android/
+          mv ios/* temp_custom/ios/
+          mv scripts/* temp_custom/scripts/
+          mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
           rm -rf android ios lib scripts images
@@ -73,36 +73,13 @@ jobs:
           curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
           curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
           
+          sed -i 's/audioplayers:.*/audioplayers: ^6.1.0/g' pubspec.yaml
+          
+          echo "flutter.compileSdkVersion=34" >> android/local.properties
+          echo "flutter.targetSdkVersion=34" >> android/local.properties
+          echo "flutter.minSdkVersion=21" >> android/local.properties
+          
           flutter pub get
-          
-          echo "Forcing global compileSdk to 36 in root build.gradle..."
-          sed -i '/buildscript {/a\    ext {\n        compileSdkVersion = 36\n        targetSdkVersion = 36\n        minSdkVersion = 21\n    }\n' android/build.gradle
-          
-          echo "Updating app build.gradle..."
-          if [ -f android/app/build.gradle ]; then
-            sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
-            sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
-            sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
-          fi
-          
-          echo "Forcing all subprojects to use compileSdk 36..."
-          cat >> android/build.gradle << 'EOF'
-
-          subprojects {
-          afterEvaluate { project ->
-           if (project.hasProperty('android')) {
-            android {
-                compileSdk 36
-                defaultConfig {
-                    minSdk 21
-                    targetSdk 36
-                }
-             }
-            }
-           }
-          }
-          EOF
-          
           dart run flutter_launcher_icons
           
           rm -rf temp_custom
@@ -145,11 +122,11 @@ jobs:
       - name: Scaffold Flutter project
         run: |
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
-          mv lib/* temp_custom/lib/ 2>/dev/null || true
-          mv android/* temp_custom/android/ 2>/dev/null || true
-          mv ios/* temp_custom/ios/ 2>/dev/null || true
-          mv scripts/* temp_custom/scripts/ 2>/dev/null || true
-          mv images/* temp_custom/images/ 2>/dev/null || true
+          mv lib/* temp_custom/lib/
+          mv android/* temp_custom/android/
+          mv ios/* temp_custom/ios/
+          mv scripts/* temp_custom/scripts/
+          mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
           rm -rf android ios lib scripts images
@@ -174,8 +151,9 @@ jobs:
           curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
           
           gem install xcodeproj
-          
           ruby scripts/setup_ios.rb
+          
+          sed -i '' 's/audioplayers:.*/audioplayers: ^6.1.0/g' pubspec.yaml
           
           flutter pub get
           dart run flutter_launcher_icons

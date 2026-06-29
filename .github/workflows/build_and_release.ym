@@ -9,37 +9,31 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch: # Allows manual trigger from Actions tab
+  workflow_dispatch:
 
 jobs:
-  # 1. Job to Build Android App (APK & App Bundle)
   build-android:
     name: Build Android (APK & AAB)
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout our custom Lekpad repository
       - name: Checkout Lekpad repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # Step 3: Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # Step 4: Scaffold the Flutter project dynamically
       - name: Scaffold Flutter project
         run: |
-          # Keep our custom files safe by moving them to a temp folder
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
           mv lib/* temp_custom/lib/
           mv android/* temp_custom/android/
@@ -48,25 +42,20 @@ jobs:
           mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
-          # Delete the now empty folders to prevent nested merging (e.g. android/android, ios/ios)
           rm -rf android ios lib scripts images
           
-          # Scaffold the Flutter project specifying package name: bc.lekpad.balochi
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
-          # Move scaffolded project up to root level
           mv lekpad_scaffold/* .
           mv lekpad_scaffold/.[!.]* . || true
           rm -rf lekpad_scaffold
           
-          # Restore our custom files back over the scaffolded template
           mkdir -p lib scripts images
           cp -r temp_custom/lib/* lib/
           cp -r temp_custom/scripts/* scripts/
           cp -r temp_custom/images/* images/
           cp temp_custom/pubspec.yaml .
           
-          # Move Android custom Kotlin file and XML resources to the correct package path: bc/lekpad/balochi
           mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
           cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/
           cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/
@@ -77,33 +66,31 @@ jobs:
           cp temp_custom/android/app/src/main/res/layout/keyboard_view.xml android/app/src/main/res/layout/
           cp temp_custom/android/app/src/main/res/layout/popup_keyboard.xml android/app/src/main/res/layout/
           
-          # Run python script to automatically inject service to AndroidManifest.xml
           python scripts/inject_android.py
           
-          # Download Amiri font assets dynamically for offline packaging
-          mkdir -p assets/fonts
+          mkdir -p assets/fonts assets/sounds
           curl -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf
           curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
+          curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
           
-          # Pre-install dependencies and generate native app launcher icons automatically!
+          sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
+          sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
+          sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
+          
           flutter pub get
           dart run flutter_launcher_icons
           
-          # Clean up temp directory
           rm -rf temp_custom
 
-      # Step 5: Install dependencies (secondary check)
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 6: Build release formats
       - name: Build Release APK
         run: flutter build apk --release
 
       - name: Build Release App Bundle (AAB)
         run: flutter build appbundle --release
 
-      # Step 7: Upload build outputs as artifacts
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -116,25 +103,20 @@ jobs:
           name: Lekpad-android-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
-
-  # 2. Job to Build iOS App on macOS
   build-ios:
     name: Build iOS (Runner App Bundle)
     runs-on: macos-latest
 
     steps:
-      # Step 1: Checkout repository
       - name: Checkout Lekpad repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # Step 3: Scaffold the Flutter project dynamically on macOS
       - name: Scaffold Flutter project
         run: |
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
@@ -145,10 +127,8 @@ jobs:
           mv images/* temp_custom/images/
           mv pubspec.yaml temp_custom/
           
-          # Delete empty custom folders to prevent double nested merging on macOS runner
           rm -rf android ios lib scripts images
           
-          # Force package name: bc.lekpad.balochi on iOS too
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
           mv lekpad_scaffold/* .
@@ -161,35 +141,28 @@ jobs:
           cp -r temp_custom/images/* images/
           cp temp_custom/pubspec.yaml .
           
-          # Put iOS custom Swift code in place
           cp temp_custom/ios/KeyboardViewController.swift ios/
           
-          # Download Amiri font assets dynamically for offline packaging
-          mkdir -p assets/fonts
+          mkdir -p assets/fonts assets/sounds
           curl -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf
           curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
+          curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
           
-          # Install CocoaPods gem required for Xcode project manipulation
           gem install xcodeproj
           
-          # Programmatically configure iOS App Keyboard Extension target in Xcode
           ruby scripts/setup_ios.rb
           
-          # Generate native launcher icons on macOS too
           flutter pub get
           dart run flutter_launcher_icons
           
           rm -rf temp_custom
 
-      # Step 4: Install dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 5: Build iOS app bundle (unsigned for CI/CD)
       - name: Build iOS (No Codesign)
         run: flutter build ios --release --no-codesign
 
-      # Step 6: Upload iOS build directory
       - name: Upload iOS App Artifact
         uses: actions/upload-artifact@v4
         with:

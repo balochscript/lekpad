@@ -257,7 +257,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                     ["2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"],
                     ["اب/ABC", "SPACE", "ENTER"]
                 ]
-            default: // symbols2
+            default:
                 return [
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"],
@@ -384,7 +384,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             renderKeys()
         case "⚙️":
             if let url = URL(string: UIApplication.openSettingsURLString) {
-                self.openURL(url)
+                extensionContext?.open(url, completionHandler: nil)
             }
         case "؟۱۲۳", "?123":
             keyboardLayoutMode = "symbols1"

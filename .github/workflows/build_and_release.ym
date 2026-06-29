@@ -73,11 +73,12 @@ jobs:
           curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
           curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
           
+          flutter pub get
+          
           sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
           sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
           sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
           
-          flutter pub get
           dart run flutter_launcher_icons
           
           rm -rf temp_custom

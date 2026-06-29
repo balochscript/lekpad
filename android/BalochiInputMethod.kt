@@ -71,7 +71,10 @@ class BalochiInputMethod : InputMethodService() {
         "ترۏنگل", "گوات", "سَنگُل", "سُهر", "بیر", "گوارَگ", "هار", "کَور", "شݔپ", "لوڈ", "لَهڈ", 
         "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", 
         "وَڈݔنَگ", "وَڈݔنۏک", "جۏڈݔنَگ", "جۏڈݔنۏک", "بَنݔنَگ", "بَنݔنۏک", "بَنݔنتگیں", "اَڈ", 
-        "شَرر", "شؤک", "زَبَردَست"
+        "شَرر", "شؤک", "زَبَردَست", "مئی", "نن", "ھؤ", "چے", "کوئ", "کُجئ", "کجا", "کۏ", "کئ",
+        "بیتَگ", "شُت", "آتک", "آتکَگ", "وَلا", "نامھُدا", "پوکو", "بگوَش", "ھُدایی", "مَھرنگ",
+        "بݔکار", "دَزبَند", "دَزگوھار", "بۏگ", "مَٹ", "اوڈہ", "چُپت", "جاتیگ", "کَلمانٹ",
+        "لُنڈ", "لَوَند", "چاپتال", "چَپورت", "ایماندار", "چاکَلݔٹ"
     )
 
     private val balotinVocab = listOf(
@@ -85,7 +88,11 @@ class BalochiInputMethod : InputMethodService() {
         "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", 
         "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", 
         "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", 
-        "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast"
+        "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast",
+        "Mai", "Nan", "Hau", "Cè", "Kuae", "Kojae", "Koja", "Kò", "Kae", "Bitag", "Šot", "Àtk",
+        "Àtkag", "Walla", "Nàmhoda", "Poko", "Beguaš", "Hodayi", "Mahrang", "Bèkàr", "Dazband",
+        "Dazguhar", "Bòg", "Mať", "Oďe", "Copt", "Jàtig", "Kalmànť", "Lonď", "Lawand", "Càptàl",
+        "Capurt", "Imàndàr", "Càkalèť"
     )
 
     private val longPressMappings = mapOf(
@@ -101,13 +108,15 @@ class BalochiInputMethod : InputMethodService() {
         "ک" to listOf("ق"),
         "ھ" to listOf("ہ", "هـ", "ح", "ه"), 
         "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
-        "و" to listOf("ۏ", "ؤ", "وْ", "وُ"),
-        "ۏ" to listOf("ۇ", "و", "ؤ", "وْ", "وُ"),
-        "ی" to listOf("ݔ", "ے", "یْ", "یٰ", "ئ"),
+        "و" to listOf("ؤ", "وْ"),
+        "ۏ" to listOf("ۇ", "وُ"),
+        "ی" to listOf("ئی", "ئ", "ۓ"),
+        "ے/ݔ" to listOf("ݔ", "یٚ"),
         "ن" to listOf("ں", "نٚ", "ْ"),
         "ر" to listOf("ڑ"),
         "ژ" to listOf("ظ"),
-        "۔" to listOf("ـ", "—", "-"), 
+        "۔" to listOf("ـ", "—", "-"),
+        "◀▶" to listOf("\u200C", "\u200D", "\u200B"),
         "a" to listOf("á", "à", "æ"),
         "d" to listOf("ď"),
         "g" to listOf("ĝ"),
@@ -206,6 +215,7 @@ class BalochiInputMethod : InputMethodService() {
                 "GLOBE" -> "🌐"
                 "SHIFT" -> "⬆"
                 "⚙️" -> "⚙️"
+                "◀▶" -> "◀▶"
                 else -> mainKey
             }
         }
@@ -232,7 +242,7 @@ class BalochiInputMethod : InputMethodService() {
         val rows = when (keyboardLayoutMode) {
             "balorabi" -> listOf(
                 listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"),
-                listOf("ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
+                listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"),
                 listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"),
                 listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"),
                 listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER")
@@ -357,7 +367,7 @@ class BalochiInputMethod : InputMethodService() {
 
     private fun playKeyPressSound() {
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val soundEnabled = prefs.getBool("flutter.kb_sound_enabled", true)
+        val soundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
         
         if (soundEnabled && soundId != -1) {
             soundPool?.play(soundId, soundVolume, soundVolume, 1, 0, 1.0f)
@@ -391,14 +401,6 @@ class BalochiInputMethod : InputMethodService() {
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
             }
-            "ABC" -> {
-                keyboardLayoutMode = "balotin"
-                setupKeyboardLayout()
-            }
-            "اب ..." -> {
-                keyboardLayoutMode = "balorabi"
-                setupKeyboardLayout()
-            }
             "؟۱۲۳", "?123" -> {
                 keyboardLayoutMode = "symbols1"
                 setupKeyboardLayout()
@@ -421,6 +423,11 @@ class BalochiInputMethod : InputMethodService() {
             }
             "◀▶" -> {
                 ic.commitText("\u200C", 1)
+            }
+            "ے/ݔ" -> {
+                ic.commitText("ے", 1)
+                val currentWord = ic.getTextBeforeCursor(20, 0)?.split(" ")?.lastOrNull() ?: ""
+                updateWordPredictions(currentWord)
             }
             else -> {
                 var typedKey = key

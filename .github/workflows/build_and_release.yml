@@ -88,16 +88,16 @@ jobs:
           app_gradle = "android/app/build.gradle"
           if os.path.exists(app_gradle):
               with open(app_gradle, "r") as f: data = f.read()
-              data = data.replace("flutter.compileSdkVersion", "34")
-              data = data.replace("flutter.targetSdkVersion", "34")
+              data = data.replace("flutter.compileSdkVersion", "36")
+              data = data.replace("flutter.targetSdkVersion", "36")
               data = data.replace("flutter.minSdkVersion", "21")
               with open(app_gradle, "w") as f: f.write(data)
               
           app_gradle_kts = "android/app/build.gradle.kts"
           if os.path.exists(app_gradle_kts):
               with open(app_gradle_kts, "r") as f: data = f.read()
-              data = data.replace("flutter.compileSdkVersion", "34")
-              data = data.replace("flutter.targetSdkVersion", "34")
+              data = data.replace("flutter.compileSdkVersion", "36")
+              data = data.replace("flutter.targetSdkVersion", "36")
               data = data.replace("flutter.minSdkVersion", "21")
               with open(app_gradle_kts, "w") as f: f.write(data)
               
@@ -107,7 +107,7 @@ jobs:
               afterEvaluate { project ->
                   if (project.hasProperty("android")) {
                       project.android {
-                          compileSdkVersion = 34
+                          compileSdkVersion = 36
                       }
                   }
               }
@@ -117,8 +117,8 @@ jobs:
               with open(root_gradle, "a") as f: f.write(force_script)
           '
           
-          echo "flutter.compileSdkVersion=34" >> android/local.properties
-          echo "flutter.targetSdkVersion=34" >> android/local.properties
+          echo "flutter.compileSdkVersion=36" >> android/local.properties
+          echo "flutter.targetSdkVersion=36" >> android/local.properties
           echo "flutter.minSdkVersion=21" >> android/local.properties
           
           flutter pub get

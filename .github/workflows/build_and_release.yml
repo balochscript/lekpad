@@ -75,13 +75,10 @@ jobs:
           
           flutter pub get
           
-          echo "Setting global Android SDK versions..."
-          cat >> android/gradle.properties << 'EOF'
-
-android.defaults.compilesdk=36
-android.defaults.targetsdk=36
-android.defaults.minsdk=21
-EOF
+          echo "" >> android/gradle.properties
+          echo "android.defaults.compilesdk=36" >> android/gradle.properties
+          echo "android.defaults.targetsdk=36" >> android/gradle.properties
+          echo "android.defaults.minsdk=21" >> android/gradle.properties
           
           if [ -f android/app/build.gradle ]; then
             sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle

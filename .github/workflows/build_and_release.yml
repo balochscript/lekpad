@@ -34,7 +34,6 @@ jobs:
 
       - name: Scaffold Flutter project
         run: |
-          # 1. Backup custom files
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images temp_custom/assets
           [ -d "lib" ] && mv lib/* temp_custom/lib/ || true
           [ -d "android" ] && mv android/* temp_custom/android/ || true
@@ -46,13 +45,11 @@ jobs:
           
           rm -rf android ios lib scripts images assets
           
-          # 2. Create fresh project
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           mv lekpad_scaffold/* .
           mv lekpad_scaffold/.[!.]* . || true
           rm -rf lekpad_scaffold
           
-          # 3. Restore files
           mkdir -p lib scripts images assets
           [ -d "temp_custom/lib" ] && cp -r temp_custom/lib/* lib/ || true
           [ -d "temp_custom/scripts" ] && cp -r temp_custom/scripts/* scripts/ || true
@@ -60,7 +57,6 @@ jobs:
           [ -d "temp_custom/assets" ] && cp -r temp_custom/assets/* assets/ || true
           [ -f "temp_custom/pubspec.yaml" ] && cp temp_custom/pubspec.yaml . || true
           
-          # 4. Restore Native Android Files
           mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
           cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
           cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
@@ -80,17 +76,14 @@ jobs:
           
           python scripts/inject_android.py
           
-          # 5. Download Fonts Safely
           mkdir -p assets/fonts
           curl -f -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf || true
           curl -f -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf || true
           
-          # 6. FORCE Update Packages to Latest Valid Versions
           flutter pub add audioplayers
           flutter pub add shared_preferences
           flutter pub add flutter_colorpicker
           
-          # 7. Force App compileSdk to 36
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle.kts || true
           sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 36/g' android/app/build.gradle.kts || true
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle.kts || true
@@ -98,15 +91,6 @@ jobs:
           echo "flutter.compileSdkVersion=36" >> android/local.properties
           echo "flutter.targetSdkVersion=36" >> android/local.properties
           echo "flutter.minSdkVersion=21" >> android/local.properties
-          
-      - name: Force SDK 36 in all Plugins (Pub Cache Patcher)
-        run: |
-          flutter pub get
-          PUB_CACHE="${PUB_CACHE:-$HOME/.pub-cache}"
-          FLUTTER_PUB_CACHE="$(dirname $(which flutter))/../.pub-cache"
-          find "$PUB_CACHE" "$FLUTTER_PUB_CACHE" -type f -name "build.gradle*" 2>/dev/null | xargs sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 36/g' || true
-          find "$PUB_CACHE" "$FLUTTER_PUB_CACHE" -type f -name "build.gradle*" 2>/dev/null | xargs sed -i 's/compileSdk [0-9]*/compileSdk 36/g' || true
-          find "$PUB_CACHE" "$FLUTTER_PUB_CACHE" -type f -name "build.gradle.kts" 2>/dev/null | xargs sed -i 's/compileSdk = [0-9]*/compileSdk = 36/g' || true
 
       - name: Generate Icons & Build APK
         run: |

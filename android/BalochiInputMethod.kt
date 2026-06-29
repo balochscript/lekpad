@@ -7,7 +7,6 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
-import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Handler
 import android.os.Looper
@@ -28,13 +27,12 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import bc.lekpad.balochi.R
 
 class BalochiInputMethod : InputMethodService() {
 
     private lateinit var keyboardView: View
-    private lateinit var suggestionBar: LinearLayout
-    private lateinit var clipboardBar: LinearLayout
+    private var suggestionBar: LinearLayout? = null
+    private var clipboardBar: LinearLayout? = null
     private var isNightMode: Boolean = false
     
     private var keyboardLayoutMode: String = "balorabi" 
@@ -135,19 +133,18 @@ class BalochiInputMethod : InputMethodService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        soundPool?.release()
+        try {
+            soundPool?.release()
+        } catch (e: Exception) {}
         soundPool = null
     }
 
     private fun initSoundPool() {
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(1)
-            .build()
-        
         try {
+            soundPool = SoundPool.Builder().setMaxStreams(1).build()
             soundId = soundPool?.load(this, R.raw.key_click, 1) ?: -1
         } catch (e: Exception) {
-            e.printStackTrace()
+            soundId = -1
         }
     }
 
@@ -158,14 +155,14 @@ class BalochiInputMethod : InputMethodService() {
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         keyboardView = inflater.inflate(R.layout.keyboard_view, null)
 
-        suggestionBar = keyboardView.findViewById(R.id.suggestion_bar)
-        clipboardBar = keyboardView.findViewById(R.id.clipboard_bar)
+        try {
+            suggestionBar = keyboardView.findViewById(R.id.suggestion_bar)
+            clipboardBar = keyboardView.findViewById(R.id.clipboard_bar)
+        } catch (e: Exception) {}
 
         try {
             amiriTypeface = Typeface.createFromAsset(assets, "flutter_assets/assets/fonts/Amiri-Regular.ttf")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) {}
 
         applyTheme()
         setupKeyboardLayout()
@@ -176,32 +173,29 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        
-        val kbBgHex = prefs.getString("flutter.kb_bg_color_hex", null)
-        val keyBgHex = prefs.getString("flutter.key_bg_color_hex", null)
-        val keyTextHex = prefs.getString("flutter.key_text_color_hex", null)
-        
-        kbBgColor = if (kbBgHex != null) {
-            android.graphics.Color.parseColor(kbBgHex)
-        } else {
-            if (isNightMode) 0xFF0F172A.toInt() else 0xFFE2E8F0.toInt()
-        }
-        
-        keyBgColor = if (keyBgHex != null) {
-            android.graphics.Color.parseColor(keyBgHex)
-        } else {
-            if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt()
-        }
-        
-        keyTextColor = if (keyTextHex != null) {
-            android.graphics.Color.parseColor(keyTextHex)
-        } else {
-            if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
-        }
+        try {
+            val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val kbBgHex = prefs.getString("flutter.kb_bg_color_hex", null)
+            val keyBgHex = prefs.getString("flutter.key_bg_color_hex", null)
+            val keyTextHex = prefs.getString("flutter.key_text_color_hex", null)
+            
+            kbBgColor = if (kbBgHex != null) android.graphics.Color.parseColor(kbBgHex) 
+                        else if (isNightMode) 0xFF0F172A.toInt() else 0xFFE2E8F0.toInt()
+            
+            keyBgColor = if (keyBgHex != null) android.graphics.Color.parseColor(keyBgHex) 
+                         else if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt()
+            
+            keyTextColor = if (keyTextHex != null) android.graphics.Color.parseColor(keyTextHex) 
+                           else if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
 
-        soundVolume = prefs.getFloat("flutter.kb_sound_volume", 0.5f)
-
+            soundVolume = prefs.getFloat("flutter.kb_sound_volume", 0.5f)
+        } catch (e: Exception) {
+            kbBgColor = if (isNightMode) 0xFF0F172A.toInt() else 0xFFE2E8F0.toInt()
+            keyBgColor = if (isNightMode) 0xFF1E293B.toInt() else 0xFFFFFFFF.toInt()
+            keyTextColor = if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
+            soundVolume = 0.5f
+        }
+        
         keyboardView.setBackgroundColor(kbBgColor)
     }
 
@@ -235,7 +229,7 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun setupKeyboardLayout() {
-        val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container)
+        val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container) ?: return
         layoutContainer.removeAllViews()
 
         val rows = when (keyboardLayoutMode) {
@@ -271,18 +265,13 @@ class BalochiInputMethod : InputMethodService() {
 
         val density = resources.displayMetrics.density
         val keyHeightPx = (48 * density).toInt()
-
         val isRtlMode = (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2")
 
         for (row in rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutDirection = if (isRtlMode) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
-                
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
 
             for (key in row) {
@@ -310,41 +299,30 @@ class BalochiInputMethod : InputMethodService() {
                     }
                     background = keyDrawable
                     elevation = 2f 
-                    
-                    if (amiriTypeface != null) {
-                        typeface = amiriTypeface
-                    }
+                    if (amiriTypeface != null) typeface = amiriTypeface
                     
                     val weight = if (key == " " || key == "SPACE") 3.0f else 1.0f
-                    
                     layoutParams = LinearLayout.LayoutParams(0, keyHeightPx, weight).apply {
                         setMargins((2 * density).toInt(), (2 * density).toInt(), (2 * density).toInt(), (2 * density).toInt())
                     }
 
                     if (key == "BACKSPACE") {
-                        setOnTouchListener(object : View.OnTouchListener {
-                            override fun onTouch(v: View, event: MotionEvent): Boolean {
-                                when (event.action) {
-                                    MotionEvent.ACTION_DOWN -> {
-                                        val ic = currentInputConnection
-                                        ic?.deleteSurroundingText(1, 0)
-                                        
-                                        playKeyPressSound()
-                                        
-                                        if (backspaceHandler == null) {
-                                            backspaceHandler = Handler(Looper.getMainLooper())
-                                        }
-                                        backspaceHandler?.postDelayed(backspaceRunnable, 500)
-                                        return true
-                                    }
-                                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                        backspaceHandler?.removeCallbacks(backspaceRunnable)
-                                        return true
-                                    }
+                        setOnTouchListener { _, event ->
+                            when (event.action) {
+                                MotionEvent.ACTION_DOWN -> {
+                                    currentInputConnection?.deleteSurroundingText(1, 0)
+                                    playKeyPressSound()
+                                    if (backspaceHandler == null) backspaceHandler = Handler(Looper.getMainLooper())
+                                    backspaceHandler?.postDelayed(backspaceRunnable, 500)
+                                    true
                                 }
-                                return false
+                                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                                    backspaceHandler?.removeCallbacks(backspaceRunnable)
+                                    true
+                                }
+                                else -> false
                             }
-                        })
+                        }
                     } else {
                         setOnClickListener { handleKeyPress(key) }
                         setOnLongClickListener { 
@@ -365,64 +343,36 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun playKeyPressSound() {
-        val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val soundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
-        
-        if (soundEnabled && soundId != -1) {
-            soundPool?.play(soundId, soundVolume, soundVolume, 1, 0, 1.0f)
-        }
+        try {
+            val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val soundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
+            if (soundEnabled && soundId != -1) {
+                soundPool?.play(soundId, soundVolume, soundVolume, 1, 0, 1.0f)
+            }
+        } catch (e: Exception) {}
     }
 
     private fun handleKeyPress(key: String) {
         val ic: InputConnection = currentInputConnection ?: return
-        
         playKeyPressSound()
 
         when (key) {
-            "SPACE", " " -> {
-                ic.commitText(" ", 1)
-                updateWordPredictions("")
-            }
-            "BACKSPACE", "⌫" -> {
-                ic.deleteSurroundingText(1, 0)
-                updateWordPredictions("")
-            }
-            "ENTER", "⏎", "مان", "Màn" -> {
-                ic.commitText("\n", 1)
-                updateWordPredictions("")
-            }
-            "GLOBE" -> {
-                keyboardLayoutMode = if (keyboardLayoutMode == "balorabi") "balotin" else "balorabi"
-                setupKeyboardLayout()
-            }
+            "SPACE", " " -> { ic.commitText(" ", 1); updateWordPredictions("") }
+            "BACKSPACE", "⌫" -> { ic.deleteSurroundingText(1, 0); updateWordPredictions("") }
+            "ENTER", "⏎", "مان", "Màn" -> { ic.commitText("\n", 1); updateWordPredictions("") }
+            "GLOBE" -> { keyboardLayoutMode = if (keyboardLayoutMode == "balorabi") "balotin" else "balorabi"; setupKeyboardLayout() }
             "⚙️" -> {
-                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
+                try {
+                    val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+                    startActivity(intent)
+                } catch (e: Exception) {}
             }
-            "؟۱۲۳", "?123" -> {
-                keyboardLayoutMode = "symbols1"
-                setupKeyboardLayout()
-            }
-            "2/2 →" -> {
-                keyboardLayoutMode = "symbols2"
-                setupKeyboardLayout()
-            }
-            "← 1/2" -> {
-                keyboardLayoutMode = "symbols1"
-                setupKeyboardLayout()
-            }
-            "اب/ABC" -> {
-                keyboardLayoutMode = if (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2") "balorabi" else "balotin"
-                setupKeyboardLayout()
-            }
-            "SHIFT", "⬆" -> {
-                isShiftActive = !isShiftActive
-                setupKeyboardLayout() 
-            }
-            "◀▶" -> {
-                ic.commitText("\u200C", 1)
-            }
+            "؟۱۲۳", "?123" -> { keyboardLayoutMode = "symbols1"; setupKeyboardLayout() }
+            "2/2 →" -> { keyboardLayoutMode = "symbols2"; setupKeyboardLayout() }
+            "← 1/2" -> { keyboardLayoutMode = "symbols1"; setupKeyboardLayout() }
+            "اب/ABC" -> { keyboardLayoutMode = if (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2") "balorabi" else "balotin"; setupKeyboardLayout() }
+            "SHIFT", "⬆" -> { isShiftActive = !isShiftActive; setupKeyboardLayout() }
+            "◀▶" -> { ic.commitText("\u200C", 1) }
             "ے/ݔ" -> {
                 ic.commitText("ے", 1)
                 val currentWord = ic.getTextBeforeCursor(20, 0)?.split(" ")?.lastOrNull() ?: ""
@@ -430,9 +380,7 @@ class BalochiInputMethod : InputMethodService() {
             }
             else -> {
                 var typedKey = key
-                if (keyboardLayoutMode == "balotin" && !isShiftActive && key.length == 1) {
-                    typedKey = key.lowercase()
-                }
+                if (keyboardLayoutMode == "balotin" && !isShiftActive && key.length == 1) typedKey = key.lowercase()
 
                 val preceding = ic.getTextBeforeCursor(1, 0)
                 if (preceding != null && preceding == "ے" && typedKey.isNotEmpty() && !isPunctuation(typedKey)) {
@@ -441,7 +389,6 @@ class BalochiInputMethod : InputMethodService() {
                 }
                 
                 ic.commitText(typedKey, 1)
-                
                 val currentWord = ic.getTextBeforeCursor(20, 0)?.split(" ")?.lastOrNull() ?: ""
                 updateWordPredictions(currentWord)
             }
@@ -450,74 +397,62 @@ class BalochiInputMethod : InputMethodService() {
 
     private fun showLongPressPopup(anchorView: View, key: String) {
         val alternatives = longPressMappings[key] ?: return
-        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val popupView = inflater.inflate(R.layout.popup_keyboard, null) as LinearLayout
-        
-        popupView.setBackgroundColor(keyBgColor)
-        popupView.setPadding(16, 12, 16, 12)
-        
-        val popupWindow = PopupWindow(
-            popupView,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
-        )
+        try {
+            val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val popupView = inflater.inflate(R.layout.popup_keyboard, null) as LinearLayout
+            
+            popupView.setBackgroundColor(keyBgColor)
+            popupView.setPadding(16, 12, 16, 12)
+            
+            val popupWindow = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
 
-        for (alt in alternatives) {
-            val altButton = Button(this).apply {
-                text = alt
-                textSize = 20f
-                setTextColor(keyTextColor)
-                if (amiriTypeface != null) {
-                    typeface = amiriTypeface
+            for (alt in alternatives) {
+                val altButton = Button(this).apply {
+                    text = alt
+                    textSize = 20f
+                    setTextColor(keyTextColor)
+                    if (amiriTypeface != null) typeface = amiriTypeface
+                    
+                    val buttonDrawable = GradientDrawable().apply {
+                        setColor(kbBgColor)
+                        cornerRadius = 12f
+                        setStroke(2, 0xFFD97706.toInt())
+                    }
+                    background = buttonDrawable
+                    setPadding(24, 12, 24, 12)
+                    
+                    setOnClickListener {
+                        currentInputConnection?.commitText(alt, 1)
+                        playKeyPressSound()
+                        popupWindow.dismiss()
+                    }
                 }
-                
-                val buttonDrawable = GradientDrawable().apply {
-                    setColor(kbBgColor)
-                    cornerRadius = 12f
-                    setStroke(2, 0xFFD97706.toInt())
-                }
-                background = buttonDrawable
-                setPadding(24, 12, 24, 12)
-                
-                setOnClickListener {
-                    val ic: InputConnection = currentInputConnection
-                    ic.commitText(alt, 1)
-                    playKeyPressSound()
-                    popupWindow.dismiss()
-                }
+                popupView.addView(altButton)
             }
-            popupView.addView(altButton)
-        }
-
-        popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 120, Gravity.CENTER)
+            popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 120, Gravity.CENTER)
+        } catch (e: Exception) {}
     }
 
     private fun updateWordPredictions(currentWord: String) {
-        suggestionBar.removeAllViews()
-        if (currentWord.isEmpty()) return
+        suggestionBar?.removeAllViews()
+        if (currentWord.isEmpty() || suggestionBar == null) return
 
         val vocabList = if (keyboardLayoutMode == "balorabi") balorabiVocab else balotinVocab
         val normalizedCurrentWord = currentWord.replace("ݔ", "ے")
         val predictions = vocabList.filter { 
-            val normalizedWord = it.replace("ݔ", "ے")
-            normalizedWord.startsWith(normalizedCurrentWord, ignoreCase = true)
+            it.replace("ݔ", "ے").startsWith(normalizedCurrentWord, ignoreCase = true)
         }.take(4)
 
         for (word in predictions) {
             val suggestionView = TextView(this).apply {
                 text = word
                 textSize = 16f
-                if (amiriTypeface != null) {
-                    typeface = amiriTypeface
-                }
+                if (amiriTypeface != null) typeface = amiriTypeface
                 setPadding(20, 10, 20, 10)
                 setTextColor(keyTextColor)
-                setOnClickListener {
-                    replaceCurrentWord(currentWord, word)
-                }
+                setOnClickListener { replaceCurrentWord(currentWord, word) }
             }
-            suggestionBar.addView(suggestionView)
+            suggestionBar?.addView(suggestionView)
         }
     }
 
@@ -530,29 +465,27 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun updateClipboardSuggestions() {
-        clipboardBar.removeAllViews()
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        if (clipboard.hasPrimaryClip() && (clipboard.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true)) {
-            val item = clipboard.primaryClip?.getItemAt(0)
-            val clipText = item?.text?.toString() ?: return
+        clipboardBar?.removeAllViews()
+        try {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            if (clipboard.hasPrimaryClip() && (clipboard.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true)) {
+                val clipText = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: return
 
-            if (clipText.isNotEmpty()) {
-                val clipView = TextView(this).apply {
-                    text = "📋 " + if (clipText.length > 15) clipText.take(12) + "..." else clipText
-                    textSize = 14f
-                    if (amiriTypeface != null) {
-                        typeface = amiriTypeface
+                if (clipText.isNotEmpty()) {
+                    val clipView = TextView(this).apply {
+                        text = "📋 " + if (clipText.length > 15) clipText.take(12) + "..." else clipText
+                        textSize = 14f
+                        if (amiriTypeface != null) typeface = amiriTypeface
+                        setPadding(15, 10, 15, 10)
+                        setTextColor(keyTextColor)
+                        setOnClickListener {
+                            currentInputConnection?.commitText(clipText, 1)
+                            playKeyPressSound()
+                        }
                     }
-                    setPadding(15, 10, 15, 10)
-                    setTextColor(keyTextColor)
-                    setOnClickListener {
-                        val ic: InputConnection = currentInputConnection
-                        ic.commitText(clipText, 1)
-                        playKeyPressSound()
-                    }
+                    clipboardBar?.addView(clipView)
                 }
-                clipboardBar.addView(clipView)
             }
-        }
+        } catch (e: Exception) {}
     }
 }

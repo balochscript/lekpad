@@ -145,8 +145,7 @@ class BalochiInputMethod : InputMethodService() {
             .build()
         
         try {
-            val afd = assets.openFd("flutter_assets/assets/sounds/key_click.mp3")
-            soundId = soundPool?.load(afd, 1) ?: -1
+            soundId = soundPool?.load(this, R.raw.key_click, 1) ?: -1
         } catch (e: Exception) {
             e.printStackTrace()
         }

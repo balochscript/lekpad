@@ -29,10 +29,12 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
-
+  
   assets:
-    - assets/sounds/key_click.mp3
-
+    - assets/fonts/
+    - assets/sounds/
+    - images/
+  
   fonts:
     - family: Amiri
       fonts:

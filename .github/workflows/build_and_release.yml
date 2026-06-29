@@ -35,11 +35,11 @@ jobs:
       - name: Scaffold Flutter project
         run: |
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
-          mv lib/* temp_custom/lib/
-          mv android/* temp_custom/android/
-          mv ios/* temp_custom/ios/
-          mv scripts/* temp_custom/scripts/
-          mv images/* temp_custom/images/
+          mv lib/* temp_custom/lib/ 2>/dev/null || true
+          mv android/* temp_custom/android/ 2>/dev/null || true
+          mv ios/* temp_custom/ios/ 2>/dev/null || true
+          mv scripts/* temp_custom/scripts/ 2>/dev/null || true
+          mv images/* temp_custom/images/ 2>/dev/null || true
           mv pubspec.yaml temp_custom/
           
           rm -rf android ios lib scripts images
@@ -75,17 +75,18 @@ jobs:
           
           flutter pub get
           
-          echo "Checking if build.gradle exists..."
-          ls -la android/app/build.gradle || echo "ERROR: build.gradle not found!"
+          echo "Setting global Android SDK versions..."
+          cat >> android/gradle.properties << 'EOF'
+
+android.defaults.compilesdk=36
+android.defaults.targetsdk=36
+android.defaults.minsdk=21
+EOF
           
           if [ -f android/app/build.gradle ]; then
-            echo "Modifying build.gradle..."
             sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
             sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
             sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
-            echo "build.gradle modified successfully"
-          else
-            echo "ERROR: build.gradle not found, skipping sed commands"
           fi
           
           dart run flutter_launcher_icons
@@ -130,11 +131,11 @@ jobs:
       - name: Scaffold Flutter project
         run: |
           mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
-          mv lib/* temp_custom/lib/
-          mv android/* temp_custom/android/
-          mv ios/* temp_custom/ios/
-          mv scripts/* temp_custom/scripts/
-          mv images/* temp_custom/images/
+          mv lib/* temp_custom/lib/ 2>/dev/null || true
+          mv android/* temp_custom/android/ 2>/dev/null || true
+          mv ios/* temp_custom/ios/ 2>/dev/null || true
+          mv scripts/* temp_custom/scripts/ 2>/dev/null || true
+          mv images/* temp_custom/images/ 2>/dev/null || true
           mv pubspec.yaml temp_custom/
           
           rm -rf android ios lib scripts images

@@ -36,7 +36,10 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         "ترۏنگل", "گوات", "سَنگُل", "سُهر", "بیر", "گوارَگ", "هار", "کَور", "شݔپ", "لوڈ", "لَهڈ", 
         "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", 
         "وَڈݔنَگ", "وَڈݔنۏک", "جۏڈݔنَگ", "جۏڈݔنۏک", "بَنݔنَگ", "بَنݔنۏک", "بَنݔنتگیں", "اَڈ", 
-        "شَرر", "شؤک", "زَبَردَست"
+        "شَرر", "شؤک", "زَبَردَست", "مئی", "نن", "ھؤ", "چے", "کوئ", "کُجئ", "کجا", "کۏ", "کئ",
+        "بیتَگ", "شُت", "آتک", "آتکَگ", "وَلا", "نامھُدا", "پوکو", "بگوَش", "ھُدایی", "مَھرنگ",
+        "بݔکار", "دَزبَند", "دَزگوھار", "بۏگ", "مَٹ", "اوڈہ", "چُپت", "جاتیگ", "کَلمانٹ",
+        "لُنڈ", "لَوَند", "چاپتال", "چَپورت", "ایماندار", "چاکَلݔٹ"
     ]
 
     private let balotinVocab = [ 
@@ -50,7 +53,11 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", 
         "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", 
         "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", 
-        "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast"
+        "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast",
+        "Mai", "Nan", "Hau", "Cè", "Kuae", "Kojae", "Koja", "Kò", "Kae", "Bitag", "Šot", "Àtk",
+        "Àtkag", "Walla", "Nàmhoda", "Poko", "Beguaš", "Hodayi", "Mahrang", "Bèkàr", "Dazband",
+        "Dazguhar", "Bòg", "Mať", "Oďe", "Copt", "Jàtig", "Kalmànť", "Lonď", "Lawand", "Càptàl",
+        "Capurt", "Imàndàr", "Càkalèť"
     ]
 
     private let longPressMappings: [String: [String]] = [
@@ -66,13 +73,15 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         "ک": ["ق"],
         "ھ": ["ہ", "هـ", "ح", "ه"], 
         "ء": ["ع", "ءَ", "ءِ", "ءُ"],
-        "و": ["ۏ", "ؤ", "وْ", "وُ"],
-        "ۏ": ["ۇ", "و", "ؤ", "وْ", "وُ"],
-        "ی": ["ݔ", "ے", "یْ", "یٰ", "ئ"],
+        "و": ["ؤ", "وْ"],
+        "ۏ": ["ۇ", "وُ"],
+        "ی": ["ئی", "ئ", "ۓ"],
+        "ے/ݔ": ["ݔ", "یٚ"],
         "ن": ["ں", "نٚ", "ْ"],
         "ر": ["ڑ"],
         "ژ": ["ظ"],
-        "۔": ["ـ", "—", "-"], 
+        "۔": ["ـ", "—", "-"],
+        "◀▶": ["\u{200C}", "\u{200D}", "\u{200B}"],
         "a": ["á", "à", "æ"],
         "d": ["ď"],
         "g": ["ĝ"],
@@ -174,7 +183,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     }
 
     private func getSpannedKeyText(mainKey: String, textColor: UIColor) -> NSAttributedString {
-        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
+        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" || mainKey == "؟۱۲۳" || mainKey == "?123" {
             
             var displayLabel = mainKey
             if mainKey == "SPACE" || mainKey == " " {
@@ -227,7 +236,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             case "balorabi":
                 return [
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
-                    ["ے", "ی", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
+                    ["ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
                     ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
                     ["⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],
                     ["؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"]
@@ -248,7 +257,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                     ["2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"],
                     ["اب/ABC", "SPACE", "ENTER"]
                 ]
-            default:
+            default: // symbols2
                 return [
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"],
@@ -345,7 +354,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     }
 
     private func isPunctuation(_ char: String) -> Bool {
-        let punc = [" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=", "۔", "ـ"]
+        let punc = [" ", "\n", "،", "؟", "?", ".", ",", ":", ";", "\"", "'", "-", "_", "+", "×", "÷", "=", "۔", "ـ", "\u{200C}"]
         return punc.contains(char)
     }
 
@@ -370,19 +379,13 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         case "⏎", "ENTER", "مان", "Màn":
             proxy.insertText("\n")
             updatePredictions("")
-        case "🌐":
+        case "🌐", "GLOBE":
             keyboardLayoutMode = (keyboardLayoutMode == "balorabi") ? "balotin" : "balorabi"
             renderKeys()
         case "⚙️":
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 self.openURL(url)
             }
-        case "ABC":
-            keyboardLayoutMode = "balotin"
-            renderKeys()
-        case "اب ...":
-            keyboardLayoutMode = "balorabi"
-            renderKeys()
         case "؟۱۲۳", "?123":
             keyboardLayoutMode = "symbols1"
             renderKeys()
@@ -401,6 +404,11 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             renderKeys()
         case "◀▶":
             proxy.insertText("\u{200C}")
+        case "ے/ݔ":
+            proxy.insertText("ے")
+            let documentContext = proxy.documentContextBeforeInput ?? ""
+            let currentWord = documentContext.components(separatedBy: " ").last ?? ""
+            updatePredictions(currentWord)
         default:
             var typedKey = key
             if keyboardLayoutMode == "balotin" && !isShiftActive && key.count == 1 {
@@ -437,7 +445,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             }
             
             if let amiriFont = UIFont(name: "Amiri", size: 20) {
-                action.setValue(amiriFont, forKey: "titleTextFont")
+                action.setValue(NSAttributedString(string: alt, attributes: [.font: amiriFont]), forKey: "attributedTitle")
             }
             
             alert.addAction(action)
@@ -460,7 +468,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
 
         if currentWord.isEmpty { return }
 
-        let activeVocab = (keyboardLayoutMode == "balorabi") ? balorabiVocab : balotinVocab
+        let activeVocab = (keyboardLayoutMode == "balorabi" || keyboardLayoutMode == "symbols2") ? balorabiVocab : balotinVocab
         let normalizedCurrentWord = currentWord.replacingOccurrences(of: "ݔ", with: "ے")
         let matches = activeVocab.filter { 
             let normalizedWord = $0.replacingOccurrences(of: "ݔ", with: "ے")

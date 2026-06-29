@@ -75,9 +75,18 @@ jobs:
           
           flutter pub get
           
-          sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
-          sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
-          sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
+          echo "Checking if build.gradle exists..."
+          ls -la android/app/build.gradle || echo "ERROR: build.gradle not found!"
+          
+          if [ -f android/app/build.gradle ]; then
+            echo "Modifying build.gradle..."
+            sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
+            sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
+            sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
+            echo "build.gradle modified successfully"
+          else
+            echo "ERROR: build.gradle not found, skipping sed commands"
+          fi
           
           dart run flutter_launcher_icons
           

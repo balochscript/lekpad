@@ -5,39 +5,41 @@
     android:orientation="vertical"
     android:padding="4dp">
 
-    <!-- Top Bar: Suggestions and Clipboard -->
-    <LinearLayout
+    <!-- Top Bar: Predictions OR Clipboard History -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_height="45dp"
         android:padding="2dp">
 
-        <!-- Clipboard Pasteur -->
+        <!-- Clipboard History (Visible when nothing is typed) -->
         <HorizontalScrollView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
             <LinearLayout
                 android:id="@+id/clipboard_bar"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:paddingEnd="8dp"/>
+                android:gravity="center_vertical"
+                android:visibility="gone" />
         </HorizontalScrollView>
 
-        <!-- Prediction list -->
+        <!-- Prediction list (Visible when typing) -->
         <HorizontalScrollView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
             <LinearLayout
                 android:id="@+id/suggestion_bar"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" />
-          </HorizontalScrollView>
-    </LinearLayout>
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
+        </HorizontalScrollView>
+    </FrameLayout>
 
-    <!-- Dynamic keys row container populated by BalochiInputMethod.kt -->
+    <!-- Keys Container -->
     <LinearLayout
         android:id="@+id/keys_container"
         android:layout_width="match_parent"

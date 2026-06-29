@@ -75,16 +75,33 @@ jobs:
           
           flutter pub get
           
-          echo "" >> android/gradle.properties
-          echo "android.defaults.compilesdk=36" >> android/gradle.properties
-          echo "android.defaults.targetsdk=36" >> android/gradle.properties
-          echo "android.defaults.minsdk=21" >> android/gradle.properties
+          echo "Forcing global compileSdk to 36 in root build.gradle..."
+          sed -i '/buildscript {/a\    ext {\n        compileSdkVersion = 36\n        targetSdkVersion = 36\n        minSdkVersion = 21\n    }\n' android/build.gradle
           
+          echo "Updating app build.gradle..."
           if [ -f android/app/build.gradle ]; then
             sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
             sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
             sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
           fi
+          
+          echo "Forcing all subprojects to use compileSdk 36..."
+          cat >> android/build.gradle << 'EOF'
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+                compileSdk 36
+                defaultConfig {
+                    minSdk 21
+                    targetSdk 36
+                }
+            }
+        }
+    }
+}
+EOF
           
           dart run flutter_launcher_icons
           

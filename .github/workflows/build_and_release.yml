@@ -75,33 +75,29 @@ jobs:
           
           flutter pub get
           
-          echo "Forcing global compileSdk to 36 in root build.gradle..."
-          sed -i '/buildscript {/a\    ext {\n        compileSdkVersion = 36\n        targetSdkVersion = 36\n        minSdkVersion = 21\n    }\n' android/build.gradle
-          
-          echo "Updating app build.gradle..."
           if [ -f android/app/build.gradle ]; then
             sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' android/app/build.gradle
             sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 36/' android/app/build.gradle
             sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
           fi
           
-          echo "Forcing all subprojects to use compileSdk 36..."
-          cat >> android/build.gradle << 'EOF'
-
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            android {
-                compileSdk 36
-                defaultConfig {
-                    minSdk 21
-                    targetSdk 36
-                }
-            }
-        }
-    }
-}
-EOF
+          if [ -f android/build.gradle ]; then
+            echo "Patching android/build.gradle for global compileSdk 36..."
+            echo "" >> android/build.gradle
+            echo "subprojects {" >> android/build.gradle
+            echo "    afterEvaluate { project ->" >> android/build.gradle
+            echo "        if (project.hasProperty('android')) {" >> android/build.gradle
+            echo "            android {" >> android/build.gradle
+            echo "                compileSdk 36" >> android/build.gradle
+            echo "                defaultConfig {" >> android/build.gradle
+            echo "                    minSdk 21" >> android/build.gradle
+            echo "                    targetSdk 36" >> android/build.gradle
+            echo "                }" >> android/build.gradle
+            echo "            }" >> android/build.gradle
+            echo "        }" >> android/build.gradle
+            echo "    }" >> android/build.gradle
+            echo "}" >> android/build.gradle
+          fi
           
           dart run flutter_launcher_icons
           

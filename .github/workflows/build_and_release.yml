@@ -34,15 +34,16 @@ jobs:
 
       - name: Scaffold Flutter project
         run: |
-          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
-          mv lib/* temp_custom/lib/
-          mv android/* temp_custom/android/
-          mv ios/* temp_custom/ios/
-          mv scripts/* temp_custom/scripts/
-          mv images/* temp_custom/images/
-          mv pubspec.yaml temp_custom/
+          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images temp_custom/assets
+          [ -d "lib" ] && mv lib/* temp_custom/lib/ || true
+          [ -d "android" ] && mv android/* temp_custom/android/ || true
+          [ -d "ios" ] && mv ios/* temp_custom/ios/ || true
+          [ -d "scripts" ] && mv scripts/* temp_custom/scripts/ || true
+          [ -d "images" ] && mv images/* temp_custom/images/ || true
+          [ -d "assets" ] && mv assets/* temp_custom/assets/ || true
+          [ -f "pubspec.yaml" ] && mv pubspec.yaml temp_custom/ || true
           
-          rm -rf android ios lib scripts images
+          rm -rf android ios lib scripts images assets
           
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
@@ -50,54 +51,77 @@ jobs:
           mv lekpad_scaffold/.[!.]* . || true
           rm -rf lekpad_scaffold
           
-          mkdir -p lib scripts images
-          cp -r temp_custom/lib/* lib/
-          cp -r temp_custom/scripts/* scripts/
-          cp -r temp_custom/images/* images/
-          cp temp_custom/pubspec.yaml .
+          mkdir -p lib scripts images assets
+          [ -d "temp_custom/lib" ] && cp -r temp_custom/lib/* lib/ || true
+          [ -d "temp_custom/scripts" ] && cp -r temp_custom/scripts/* scripts/ || true
+          [ -d "temp_custom/images" ] && cp -r temp_custom/images/* images/ || true
+          [ -d "temp_custom/assets" ] && cp -r temp_custom/assets/* assets/ || true
+          [ -f "temp_custom/pubspec.yaml" ] && cp temp_custom/pubspec.yaml . || true
           
           mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
-          cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/
-          cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/
+          cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
+          cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
           
           mkdir -p android/app/src/main/res/xml
           mkdir -p android/app/src/main/res/layout
           mkdir -p android/app/src/main/res/raw
           
-          cp temp_custom/android/app/src/main/res/xml/method.xml android/app/src/main/res/xml/
-          cp temp_custom/android/app/src/main/res/layout/keyboard_view.xml android/app/src/main/res/layout/
-          cp temp_custom/android/app/src/main/res/layout/popup_keyboard.xml android/app/src/main/res/layout/
+          cp temp_custom/android/app/src/main/res/xml/method.xml android/app/src/main/res/xml/ || true
+          cp temp_custom/android/app/src/main/res/layout/keyboard_view.xml android/app/src/main/res/layout/ || true
+          cp temp_custom/android/app/src/main/res/layout/popup_keyboard.xml android/app/src/main/res/layout/ || true
+          
+          if [ -f "temp_custom/android/app/src/main/res/raw/key_click.mp3" ]; then
+              cp temp_custom/android/app/src/main/res/raw/key_click.mp3 android/app/src/main/res/raw/ || true
+          elif [ -f "assets/sounds/key_click.mp3" ]; then
+              cp assets/sounds/key_click.mp3 android/app/src/main/res/raw/ || true
+          fi
           
           python scripts/inject_android.py
           
-          mkdir -p assets/fonts assets/sounds
-          curl -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf
-          curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
-          curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
+          mkdir -p assets/fonts
+          curl -f -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf || true
+          curl -f -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf || true
           
-          curl -L -o android/app/src/main/res/raw/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
+          python -c '
+          import os
+          
+          app_gradle = "android/app/build.gradle"
+          if os.path.exists(app_gradle):
+              with open(app_gradle, "r") as f: data = f.read()
+              data = data.replace("flutter.compileSdkVersion", "34")
+              data = data.replace("flutter.targetSdkVersion", "34")
+              data = data.replace("flutter.minSdkVersion", "21")
+              with open(app_gradle, "w") as f: f.write(data)
+              
+          app_gradle_kts = "android/app/build.gradle.kts"
+          if os.path.exists(app_gradle_kts):
+              with open(app_gradle_kts, "r") as f: data = f.read()
+              data = data.replace("flutter.compileSdkVersion", "34")
+              data = data.replace("flutter.targetSdkVersion", "34")
+              data = data.replace("flutter.minSdkVersion", "21")
+              with open(app_gradle_kts, "w") as f: f.write(data)
+              
+          root_gradle = "android/build.gradle"
+          force_script = """
+          subprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty("android")) {
+                      project.android {
+                          compileSdkVersion = 34
+                      }
+                  }
+              }
+          }
+          """
+          if os.path.exists(root_gradle):
+              with open(root_gradle, "a") as f: f.write(force_script)
+          '
+          
+          echo "flutter.compileSdkVersion=34" >> android/local.properties
+          echo "flutter.targetSdkVersion=34" >> android/local.properties
+          echo "flutter.minSdkVersion=21" >> android/local.properties
           
           flutter pub get
-          
-          if [ -f android/app/build.gradle ]; then
-            sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 34/' android/app/build.gradle
-            sed -i 's/targetSdk flutter.targetSdkVersion/targetSdk 34/' android/app/build.gradle
-            sed -i 's/minSdk flutter.minSdkVersion/minSdk 21/' android/app/build.gradle
-          fi
-          
-          if [ -f android/build.gradle ]; then
-            echo "" >> android/build.gradle
-            echo "subprojects {" >> android/build.gradle
-            echo "    afterEvaluate { project ->" >> android/build.gradle
-            echo "        if (project.hasProperty('android')) {" >> android/build.gradle
-            echo "            android {" >> android/build.gradle
-            echo "                compileSdk 34" >> android/build.gradle
-            echo "            }" >> android/build.gradle
-            echo "        }" >> android/build.gradle
-            echo "    }" >> android/build.gradle
-            echo "}" >> android/build.gradle
-          fi
-          
           dart run flutter_launcher_icons
           
           rm -rf temp_custom
@@ -139,15 +163,16 @@ jobs:
 
       - name: Scaffold Flutter project
         run: |
-          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images
-          mv lib/* temp_custom/lib/
-          mv android/* temp_custom/android/
-          mv ios/* temp_custom/ios/
-          mv scripts/* temp_custom/scripts/
-          mv images/* temp_custom/images/
-          mv pubspec.yaml temp_custom/
+          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images temp_custom/assets
+          [ -d "lib" ] && mv lib/* temp_custom/lib/ || true
+          [ -d "android" ] && mv android/* temp_custom/android/ || true
+          [ -d "ios" ] && mv ios/* temp_custom/ios/ || true
+          [ -d "scripts" ] && mv scripts/* temp_custom/scripts/ || true
+          [ -d "images" ] && mv images/* temp_custom/images/ || true
+          [ -d "assets" ] && mv assets/* temp_custom/assets/ || true
+          [ -f "pubspec.yaml" ] && mv pubspec.yaml temp_custom/ || true
           
-          rm -rf android ios lib scripts images
+          rm -rf android ios lib scripts images assets
           
           flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
           
@@ -155,18 +180,18 @@ jobs:
           mv lekpad_scaffold/.[!.]* . || true
           rm -rf lekpad_scaffold
           
-          mkdir -p lib scripts images
-          cp -r temp_custom/lib/* lib/
-          cp -r temp_custom/scripts/* scripts/
-          cp -r temp_custom/images/* images/
-          cp temp_custom/pubspec.yaml .
+          mkdir -p lib scripts images assets
+          [ -d "temp_custom/lib" ] && cp -r temp_custom/lib/* lib/ || true
+          [ -d "temp_custom/scripts" ] && cp -r temp_custom/scripts/* scripts/ || true
+          [ -d "temp_custom/images" ] && cp -r temp_custom/images/* images/ || true
+          [ -d "temp_custom/assets" ] && cp -r temp_custom/assets/* assets/ || true
+          [ -f "temp_custom/pubspec.yaml" ] && cp temp_custom/pubspec.yaml . || true
           
-          cp temp_custom/ios/KeyboardViewController.swift ios/
+          cp temp_custom/ios/KeyboardViewController.swift ios/ || true
           
-          mkdir -p assets/fonts assets/sounds
-          curl -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf
-          curl -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf
-          curl -L -o assets/sounds/key_click.mp3 https://github.com/balochscript/lekpad/releases/download/assets/key_click.mp3 || echo "Skip sound"
+          mkdir -p assets/fonts
+          curl -f -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf || true
+          curl -f -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf || true
           
           gem install xcodeproj
           ruby scripts/setup_ios.rb

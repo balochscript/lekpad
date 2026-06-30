@@ -5,46 +5,97 @@
     android:orientation="vertical"
     android:padding="4dp">
 
-    <!-- Top Bar: Predictions OR Clipboard History -->
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="45dp"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:padding="2dp">
 
-        <!-- Clipboard History (Visible when nothing is typed) -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="none">
-            <LinearLayout
-                android:id="@+id/clipboard_bar"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:visibility="gone" />
-        </HorizontalScrollView>
+        <TextView
+            android:id="@+id/btn_open_clipboard"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="📋"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_marginEnd="4dp" />
 
-        <!-- Prediction list (Visible when typing) -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="30dp"
+            android:background="#33888888"
+            android:layout_marginEnd="8dp"/>
+
         <HorizontalScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="none">
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipChildren="false">
             <LinearLayout
                 android:id="@+id/suggestion_bar"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical" />
         </HorizontalScrollView>
-    </FrameLayout>
+    </LinearLayout>
 
-    <!-- Keys Container -->
-    <LinearLayout
-        android:id="@+id/keys_container"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="4dp" />
+        android:layout_height="wrap_content">
 
+        <LinearLayout
+            android:id="@+id/keys_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="4dp" />
+
+        <LinearLayout
+            android:id="@+id/clipboard_full_view"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:background="#E2E8F0">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Clipboard History"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="#333333"/>
+                <TextView
+                    android:id="@+id/btn_close_clipboard"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="✖"
+                    android:textSize="18sp"
+                    android:textColor="#DC2626"/>
+            </LinearLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <LinearLayout
+                    android:id="@+id/clipboard_list_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp"/>
+            </ScrollView>
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

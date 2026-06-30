@@ -61,40 +61,49 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     ]
 
     private let longPressMappings: [String: [String]] = [
-        "ت": ["ث", "ط", "ّ"],
-        "ج": ["ح"],
-        "چ": ["خ"],
-        "د": ["ذ"],
-        "س": ["ص"],
-        "ز": ["ض", "ظ"],
-        "ا": ["ع", "آ", "أ", "إ", "َ", "ِ", "ُ"],
-        "گ": ["غ"],
+        "ت": ["ث", "ط", "ٹ", "ّ"],
+        "ج": ["ح", "خ"],
+        "چ": ["خ", "ځ"],
+        "د": ["ذ", "ڈ", "ض"],
+        "س": ["ص", "ث", "ش"],
+        "ز": ["ض", "ظ", "ذ", "ژ"],
+        "ا": ["ع", "آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ", "ٝ"],
+        "گ": ["غ", "ق"],
         "پ": ["ف"],
-        "ک": ["ق"],
-        "ھ": ["ہ", "هـ", "ح", "ه"], 
+        "ک": ["ق", "خ", "گ"],
+        "ھ": ["ہ", "هـ", "ح", "ه", "ة", "ۀ"], 
         "ء": ["ع", "ءَ", "ءِ", "ءُ"],
-        "و": ["ؤ", "وْ"],
-        "ۏ": ["ۇ", "وُ"],
-        "ی": ["ئی", "ئ", "ۓ"],
-        "ے/ݔ": ["ݔ", "یٚ"],
-        "ن": ["ں", "نٚ", "ْ"],
-        "ر": ["ڑ"],
-        "ژ": ["ظ"],
+        "و": ["ؤ", "وْ", "ۆ", "ۏ", "ۇ", "وُ"],
+        "ۏ": ["ۇ", "وُ", "ؤ"],
+        "ی": ["ئی", "ئ", "ۓ", "ي", "ے", "ݔ"],
+        "ے/ݔ": ["ݔ", "یٚ", "ے"],
+        "ن": ["ں", "نٚ", "ْ", "ڻ"],
+        "ر": ["ڑ", "ز", "ژ"],
+        "ژ": ["ظ", "ض"],
+        "ل": ["ڷ", "ڵ"],
         "۔": ["ـ", "—", "-"],
         "◀▶": ["\u{200C}", "\u{200D}", "\u{200B}"],
-        "a": ["á", "à", "æ"],
+        "a": ["á", "à", "æ", "â", "ä"],
         "d": ["ď"],
+        "e": ["é", "è", "ê", "ë"],
         "g": ["ĝ"],
-        "i": ["í", "ì"],
+        "i": ["í", "ì", "î", "ï"],
+        "o": ["ò", "ó", "ô", "ö"],
         "r": ["ř"],
         "s": ["š"],
         "t": ["ť"],
-        "u": ["ú", "ù"],
+        "u": ["ú", "ù", "û", "ü"],
         "z": ["ž"]
     ]
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, options: .mixWithOthers)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {}
+        
         loadSoundSettings()
         setupTopBar()
         setupKeyboardRows()
@@ -183,23 +192,26 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     }
 
     private func getSpannedKeyText(mainKey: String, textColor: UIColor) -> NSAttributedString {
-        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" || mainKey == "؟۱۲۳" || mainKey == "?123" {
-            
-            var displayLabel = mainKey
-            if mainKey == "SPACE" || mainKey == " " {
-                displayLabel = "␣"
-            } else if mainKey == "BACKSPACE" || mainKey == "⌫" {
-                displayLabel = "⌫"
-            } else if mainKey == "ENTER" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" {
-                displayLabel = "⏎"
-            } else if mainKey == "GLOBE" {
-                displayLabel = "🌐"
-            } else if mainKey == "SHIFT" {
-                displayLabel = "⬆"
-            } else if mainKey == "⚙️" {
-                displayLabel = "⚙️"
-            }
-            
+        var displayLabel = mainKey
+        
+        switch mainKey {
+            case "َ": displayLabel = "◌َ"
+            case "ِ": displayLabel = "◌ِ"
+            case "ُ": displayLabel = "◌ُ"
+            case "ّ": displayLabel = "◌ّ"
+            case "ٚ": displayLabel = "◌ٚ"
+            case "ْ": displayLabel = "◌ْ"
+            case "ٝ": displayLabel = "◌ٝ"
+            case "SPACE", " ": displayLabel = "␣"
+            case "BACKSPACE", "⌫": displayLabel = "⌫"
+            case "ENTER", "⏎", "مان", "Màn": displayLabel = "⏎"
+            case "GLOBE": displayLabel = "🌐"
+            case "SHIFT": displayLabel = "⬆"
+            case "⚙️": displayLabel = "⚙️"
+            default: break
+        }
+        
+        if mainKey.count > 1 || mainKey == " " || mainKey == "َ" || mainKey == "ِ" || mainKey == "ُ" || mainKey == "ّ" || mainKey == "ٚ" || mainKey == "ْ" || mainKey == "ٝ" {
             return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
         }
 
@@ -215,7 +227,19 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             .foregroundColor: textColor
         ])
         
-        let hintAttributedString = NSAttributedString(string: hint, attributes: [
+        var displayHint = hint
+        switch hint {
+            case "َ": displayHint = "◌َ"
+            case "ِ": displayHint = "◌ِ"
+            case "ُ": displayHint = "◌ُ"
+            case "ّ": displayHint = "◌ّ"
+            case "ٚ": displayHint = "◌ٚ"
+            case "ْ": displayHint = "◌ْ"
+            case "ٝ": displayHint = "◌ٝ"
+            default: break
+        }
+        
+        let hintAttributedString = NSAttributedString(string: displayHint, attributes: [
             .font: hintFont,
             .foregroundColor: UIColor(red: 0.86, green: 0.15, blue: 0.15, alpha: 1.0),
             .baselineOffset: 8
@@ -235,7 +259,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             switch keyboardLayoutMode {
             case "balorabi":
                 return [
-                    ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
+                    ["۱", "۲", "۳", "َ", "ِ", "ُ", "ّ", "ٚ", "ْ", "ٝ"],
                     ["ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
                     ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
                     ["⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],
@@ -361,7 +385,9 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     @objc private func keyTapped(_ sender: UIButton) {
         guard let keyText = sender.currentAttributedTitle?.string ?? sender.titleLabel?.text else { return }
         let key = keyText.components(separatedBy: " ").first ?? keyText
-        handleKeyPress(key == "␣" ? " " : key)
+        
+        let cleanedKey = key.replacingOccurrences(of: "◌", with: "")
+        handleKeyPress(cleanedKey == "␣" ? " " : cleanedKey)
     }
 
     private func handleKeyPress(_ key: String) {
@@ -430,9 +456,12 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began,
               let button = gesture.view as? UIButton,
-              let mainText = button.currentAttributedTitle?.string ?? button.titleLabel?.text,
-              let key = mainText.components(separatedBy: " ").first,
-              let alternatives = longPressMappings[key == "␣" ? " " : key] else { return }
+              let mainText = button.currentAttributedTitle?.string ?? button.titleLabel?.text else { return }
+
+        let rawKey = mainText.components(separatedBy: " ").first ?? ""
+        let key = rawKey.replacingOccurrences(of: "◌", with: "")
+        
+        guard let alternatives = longPressMappings[key == "␣" ? " " : key] else { return }
 
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
@@ -444,8 +473,20 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                 self.playNativeClickSound()
             }
             
-            if let amiriFont = UIFont(name: "Amiri", size: 20) {
-                action.setValue(NSAttributedString(string: alt, attributes: [.font: amiriFont]), forKey: "attributedTitle")
+            var displayAlt = alt
+            switch alt {
+                case "َ": displayAlt = "◌َ"
+                case "ِ": displayAlt = "◌ِ"
+                case "ُ": displayAlt = "◌ُ"
+                case "ّ": displayAlt = "◌ّ"
+                case "ٚ": displayAlt = "◌ٚ"
+                case "ْ": displayAlt = "◌ْ"
+                case "ٝ": displayAlt = "◌ٝ"
+                default: break
+            }
+            
+            if let amiriFont = UIFont(name: "Amiri", size: 28) {
+                action.setValue(NSAttributedString(string: displayAlt, attributes: [.font: amiriFont]), forKey: "attributedTitle")
             }
             
             alert.addAction(action)

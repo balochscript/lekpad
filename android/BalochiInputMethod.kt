@@ -83,14 +83,39 @@ class BalochiInputMethod : InputMethodService() {
     private val balotinVocab = listOf("Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj", "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik", "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag", "Ustum", "Ustàz", "Òlàk", "Òšt", "Pattar", "Pit", "Poll", "Rung", "Ràhšòn", "Siyàh", "Sangat", "Suhl", "Šàšk", "Šaš", "Šahdarbarjàh", "Tal", "Talàr", "Ťak", "Ťràšò", "Hur", "Wail", "Wàhag", "Yal", "Zahèr", "Ziďď", "Zàl", "Žàng", "Bòž", "Balòc", "Balòcestàn", "Balòcī", "Salàm", "Vàlaik", "Čònai", "Man", "Vašaon", "Tà", "Han", "Ce", "Hàl", "Ent", "Vaš", "Salàmati", "Jòďī", "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast", "Mai", "Nan", "Hau", "Cè", "Kuae", "Kojae", "Koja", "Kò", "Kae", "Bitag", "Šot", "Àtk", "Àtkag", "Walla", "Nàmhoda", "Poko", "Beguaš", "Hodayi", "Mahrang", "Bèkàr", "Dazband", "Dazguhar", "Bòg", "Mať", "Oďe", "Copt", "Jàtig", "Kalmànť", "Lonď", "Lawand", "Càptàl", "Capurt", "Imàndàr", "Càkalèť")
     
     private val longPressMappings = mapOf(
-        "ت" to listOf("ث", "ط", "ّ"), "ج" to listOf("ح", "خ"), "چ" to listOf("خ"), "د" to listOf("ذ"), "س" to listOf("ص"),
-        "ز" to listOf("ض", "ظ"), "ا" to listOf("ع", "آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ"), "گ" to listOf("غ"), 
-        "پ" to listOf("ف"), "ک" to listOf("ق", "خ"), "ھ" to listOf("ہ", "هـ", "ح", "ه"), "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
-        "و" to listOf("ؤ", "وْ"), "ۏ" to listOf("ۇ", "وُ"), "ی" to listOf("ئی", "ئ", "ۓ"), "ے/ݔ" to listOf("ݔ", "یٚ"),
-        "ن" to listOf("ں", "نٚ", "ْ"), "ر" to listOf("ڑ"), "ژ" to listOf("ظ"), "ل" to listOf("ڷ"), "۔" to listOf("ـ", "—", "-"),
-        "◀▶" to listOf("\u200C", "\u200D", "\u200B"), "a" to listOf("á", "à", "æ"), "d" to listOf("ď"),
-        "g" to listOf("ĝ"), "i" to listOf("í", "ì"), "r" to listOf("ř"), "s" to listOf("š"),
-        "t" to listOf("ť"), "u" to listOf("ú", "ù"), "z" to listOf("ž")
+        "ت" to listOf("ث", "ط", "ٹ", "ّ"), 
+        "ج" to listOf("ح", "خ"), 
+        "چ" to listOf("خ", "ځ"), 
+        "د" to listOf("ذ", "ڈ", "ض"), 
+        "س" to listOf("ص", "ث", "ش"),
+        "ز" to listOf("ض", "ظ", "ذ", "ژ"), 
+        "ا" to listOf("ع", "آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ", "ٝ"), 
+        "گ" to listOf("غ", "ق"), 
+        "پ" to listOf("ف"), 
+        "ک" to listOf("ق", "خ", "گ"), 
+        "ھ" to listOf("ہ", "هـ", "ح", "ه", "ة", "ۀ"), 
+        "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
+        "و" to listOf("ؤ", "وْ", "ۆ", "ۏ", "ۇ", "وُ"), 
+        "ۏ" to listOf("ۇ", "وُ", "ؤ"), 
+        "ی" to listOf("ئی", "ئ", "ۓ", "ي", "ے", "ݔ"), 
+        "ے/ݔ" to listOf("ݔ", "یٚ", "ے"),
+        "ن" to listOf("ں", "نٚ", "ْ", "ڻ"), 
+        "ر" to listOf("ڑ", "ز", "ژ"), 
+        "ژ" to listOf("ظ", "ض"), 
+        "ل" to listOf("ڷ", "ڵ"), 
+        "۔" to listOf("ـ", "—", "-"),
+        "◀▶" to listOf("\u200C", "\u200D", "\u200B"), 
+        "a" to listOf("á", "à", "æ", "â", "ä"), 
+        "d" to listOf("ď"),
+        "e" to listOf("é", "è", "ê", "ë"),
+        "g" to listOf("ĝ"), 
+        "i" to listOf("í", "ì", "î", "ï"), 
+        "o" to listOf("ò", "ó", "ô", "ö"),
+        "r" to listOf("ř"), 
+        "s" to listOf("š"),
+        "t" to listOf("ť"), 
+        "u" to listOf("ú", "ù", "û", "ü"), 
+        "z" to listOf("ž")
     )
 
     override fun onCreate() {
@@ -161,8 +186,13 @@ class BalochiInputMethod : InputMethodService() {
             keyTextColor = if (keyTextHex != null) android.graphics.Color.parseColor(keyTextHex) else if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
 
             isSoundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
-            try { soundVolume = prefs.getFloat("flutter.kb_sound_volume", 0.5f) } catch (e: Exception) {
-                soundVolume = prefs.getString("flutter.kb_sound_volume", "0.5")?.toFloat() ?: 0.5f
+            
+            val volPref = prefs.all["flutter.kb_sound_volume"]
+            soundVolume = when (volPref) {
+                is Double -> volPref.toFloat()
+                is Float -> volPref
+                is String -> volPref.toFloatOrNull() ?: 0.5f
+                else -> 0.5f
             }
         } catch (e: Exception) {}
         
@@ -419,14 +449,27 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun getSpannedKeyText(mainKey: String): CharSequence {
-        if (mainKey.length > 1 || mainKey == " ") {
-            return when (mainKey) { "SPACE", " " -> "␣"; "BACKSPACE" -> "⌫"; "ENTER" -> "⏎"; "GLOBE" -> "🌐"; "SHIFT" -> "⬆"; else -> mainKey }
+        var displayLabel = mainKey
+        when (mainKey) {
+            "َ" -> displayLabel = "◌َ"
+            "ِ" -> displayLabel = "◌ِ"
+            "ُ" -> displayLabel = "◌ُ"
+            "ّ" -> displayLabel = "◌ّ"
+            "ٚ" -> displayLabel = "◌ٚ"
+            "ْ" -> displayLabel = "◌ْ"
+            "ٝ" -> displayLabel = "◌ٝ"
+            "SPACE", " " -> return "␣"
+            "BACKSPACE" -> return "⌫"
+            "ENTER" -> return "⏎"
+            "GLOBE" -> return "🌐"
+            "SHIFT" -> return "⬆"
         }
-        val hint = longPressMappings[mainKey]?.firstOrNull() ?: return mainKey
-        val spanText = SpannableString("$mainKey $hint")
-        spanText.setSpan(AbsoluteSizeSpan(18, true), 0, mainKey.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        spanText.setSpan(ForegroundColorSpan(keyTextColor), 0, mainKey.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        val hintStart = mainKey.length + 1
+
+        val hint = longPressMappings[mainKey]?.firstOrNull() ?: return displayLabel
+        val spanText = SpannableString("$displayLabel $hint")
+        spanText.setSpan(AbsoluteSizeSpan(18, true), 0, displayLabel.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spanText.setSpan(ForegroundColorSpan(keyTextColor), 0, displayLabel.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val hintStart = displayLabel.length + 1
         spanText.setSpan(AbsoluteSizeSpan(10, true), hintStart, spanText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spanText.setSpan(ForegroundColorSpan(0xFFDC2626.toInt()), hintStart, spanText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spanText.setSpan(RelativeSizeSpan(0.6f), hintStart, spanText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -435,7 +478,7 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun getRowsForMode() = when (keyboardLayoutMode) {
-        "balorabi" -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"), listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"), listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"), listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"))
+        "balorabi" -> listOf(listOf("۱", "۲", "۳", "َ", "ِ", "ُ", "ّ", "ٚ", "ْ", "ٝ"), listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"), listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"), listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"), listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"))
         "balotin" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"), listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"), listOf("SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "BACKSPACE"), listOf("?123", "GLOBE", "SPACE", ".", "ENTER"))
         "symbols1" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("+", "×", "÷", "=", "٪", "^", "!", "@", "#", "$"), listOf("/", "\\", "~", "*", "(", ")", "-", "_", "|", "&"), listOf("2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))
         else -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"), listOf("❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"), listOf("← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))
@@ -461,7 +504,17 @@ class BalochiInputMethod : InputMethodService() {
             
             for (alt in alternatives) {
                 popupContainer.addView(TextView(this).apply {
-                    text = alt
+                    var displayAlt = alt
+                    when(alt) {
+                        "َ" -> displayAlt = "◌َ"
+                        "ِ" -> displayAlt = "◌ِ"
+                        "ُ" -> displayAlt = "◌ُ"
+                        "ّ" -> displayAlt = "◌ّ"
+                        "ٚ" -> displayAlt = "◌ٚ"
+                        "ْ" -> displayAlt = "◌ْ"
+                        "ٝ" -> displayAlt = "◌ٝ"
+                    }
+                    text = displayAlt
                     textSize = 24f
                     setTextColor(keyTextColor)
                     gravity = Gravity.CENTER

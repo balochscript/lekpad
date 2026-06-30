@@ -61,25 +61,24 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
     ]
 
     private let longPressMappings: [String: [String]] = [
-        "ت": ["ث", "ط", "ٹ", "ّ"],
-        "ج": ["ح", "خ"],
+        "ت": ["ث", "ط"],
+        "ج": ["ح"],
         "چ": ["خ", "ځ"],
-        "د": ["ذ", "ڈ", "ض"],
-        "س": ["ص", "ث", "ش"],
-        "ز": ["ض", "ظ", "ذ", "ژ"],
-        "ا": ["ع", "آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ", "ٝ"],
-        "گ": ["غ", "ق"],
+        "د": ["ذ"],
+        "س": ["ص"],
+        "ز": ["ض", "ظ"],
+        "ا": ["آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ", "ٝ"],
+        "گ": ["غ"],
         "پ": ["ف"],
-        "ک": ["ق", "خ", "گ"],
-        "ھ": ["ہ", "هـ", "ح", "ه", "ة", "ۀ"], 
+        "ک": ["ق"],
+        "ھ": ["ہ", "هـ", "ه", "ة", "ۀ"], 
         "ء": ["ع", "ءَ", "ءِ", "ءُ"],
-        "و": ["ؤ", "وْ", "ۆ", "ۏ", "ۇ", "وُ"],
-        "ۏ": ["ۇ", "وُ", "ؤ"],
-        "ی": ["ئی", "ئ", "ۓ", "ي", "ے", "ݔ"],
-        "ے/ݔ": ["ݔ", "یٚ", "ے"],
-        "ن": ["ں", "نٚ", "ْ", "ڻ"],
-        "ر": ["ڑ", "ز", "ژ"],
-        "ژ": ["ظ", "ض"],
+        "و": ["ؤ", "ۆ", "ۇ"],
+        "ۏ": ["وُ"],
+        "ی": ["ئ", "ي", "ۓ", "ئی"],
+        "ے/ݔ": ["یٚ"],
+        "ن": ["ں", "نٚ", "ڻ"],
+        "ر": ["ڑ"],
         "ل": ["ڷ", "ڵ"],
         "۔": ["ـ", "—", "-"],
         "◀▶": ["\u{200C}", "\u{200D}", "\u{200B}"],
@@ -195,13 +194,6 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         var displayLabel = mainKey
         
         switch mainKey {
-            case "َ": displayLabel = "◌َ"
-            case "ِ": displayLabel = "◌ِ"
-            case "ُ": displayLabel = "◌ُ"
-            case "ّ": displayLabel = "◌ّ"
-            case "ٚ": displayLabel = "◌ٚ"
-            case "ْ": displayLabel = "◌ْ"
-            case "ٝ": displayLabel = "◌ٝ"
             case "SPACE", " ": displayLabel = "␣"
             case "BACKSPACE", "⌫": displayLabel = "⌫"
             case "ENTER", "⏎", "مان", "Màn": displayLabel = "⏎"
@@ -211,7 +203,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             default: break
         }
         
-        if mainKey.count > 1 || mainKey == " " || mainKey == "َ" || mainKey == "ِ" || mainKey == "ُ" || mainKey == "ّ" || mainKey == "ٚ" || mainKey == "ْ" || mainKey == "ٝ" {
+        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" || mainKey == "؟۱۲۳" || mainKey == "?123" {
             return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
         }
 
@@ -259,7 +251,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             switch keyboardLayoutMode {
             case "balorabi":
                 return [
-                    ["۱", "۲", "۳", "َ", "ِ", "ُ", "ّ", "ٚ", "ْ", "ٝ"],
+                    ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
                     ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
                     ["⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],

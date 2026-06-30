@@ -83,25 +83,24 @@ class BalochiInputMethod : InputMethodService() {
     private val balotinVocab = listOf("Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj", "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik", "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag", "Ustum", "Ustàz", "Òlàk", "Òšt", "Pattar", "Pit", "Poll", "Rung", "Ràhšòn", "Siyàh", "Sangat", "Suhl", "Šàšk", "Šaš", "Šahdarbarjàh", "Tal", "Talàr", "Ťak", "Ťràšò", "Hur", "Wail", "Wàhag", "Yal", "Zahèr", "Ziďď", "Zàl", "Žàng", "Bòž", "Balòc", "Balòcestàn", "Balòcī", "Salàm", "Vàlaik", "Čònai", "Man", "Vašaon", "Tà", "Han", "Ce", "Hàl", "Ent", "Vaš", "Salàmati", "Jòďī", "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast", "Mai", "Nan", "Hau", "Cè", "Kuae", "Kojae", "Koja", "Kò", "Kae", "Bitag", "Šot", "Àtk", "Àtkag", "Walla", "Nàmhoda", "Poko", "Beguaš", "Hodayi", "Mahrang", "Bèkàr", "Dazband", "Dazguhar", "Bòg", "Mať", "Oďe", "Copt", "Jàtig", "Kalmànť", "Lonď", "Lawand", "Càptàl", "Capurt", "Imàndàr", "Càkalèť")
     
     private val longPressMappings = mapOf(
-        "ت" to listOf("ث", "ط", "ٹ", "ّ"), 
-        "ج" to listOf("ح", "خ"), 
+        "ت" to listOf("ث", "ط"), 
+        "ج" to listOf("ح"), 
         "چ" to listOf("خ", "ځ"), 
-        "د" to listOf("ذ", "ڈ", "ض"), 
-        "س" to listOf("ص", "ث", "ش"),
-        "ز" to listOf("ض", "ظ", "ذ", "ژ"), 
-        "ا" to listOf("ع", "آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ", "ٝ"), 
-        "گ" to listOf("غ", "ق"), 
+        "د" to listOf("ذ"), 
+        "س" to listOf("ص"),
+        "ز" to listOf("ض", "ظ"), 
+        "ا" to listOf("آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ", "ٝ"), 
+        "گ" to listOf("غ"), 
         "پ" to listOf("ف"), 
-        "ک" to listOf("ق", "خ", "گ"), 
-        "ھ" to listOf("ہ", "هـ", "ح", "ه", "ة", "ۀ"), 
+        "ک" to listOf("ق"), 
+        "ھ" to listOf("ہ", "هـ", "ه", "ة", "ۀ"), 
         "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
-        "و" to listOf("ؤ", "وْ", "ۆ", "ۏ", "ۇ", "وُ"), 
-        "ۏ" to listOf("ۇ", "وُ", "ؤ"), 
-        "ی" to listOf("ئی", "ئ", "ۓ", "ي", "ے", "ݔ"), 
-        "ے/ݔ" to listOf("ݔ", "یٚ", "ے"),
-        "ن" to listOf("ں", "نٚ", "ْ", "ڻ"), 
-        "ر" to listOf("ڑ", "ز", "ژ"), 
-        "ژ" to listOf("ظ", "ض"), 
+        "و" to listOf("ؤ", "ۆ", "ۇ"), 
+        "ۏ" to listOf("وُ"), 
+        "ی" to listOf("ئ", "ي", "ۓ", "ئی"), 
+        "ے/ݔ" to listOf("یٚ"),
+        "ن" to listOf("ں", "نٚ", "ڻ"), 
+        "ر" to listOf("ڑ"), 
         "ل" to listOf("ڷ", "ڵ"), 
         "۔" to listOf("ـ", "—", "-"),
         "◀▶" to listOf("\u200C", "\u200D", "\u200B"), 
@@ -451,13 +450,6 @@ class BalochiInputMethod : InputMethodService() {
     private fun getSpannedKeyText(mainKey: String): CharSequence {
         var displayLabel = mainKey
         when (mainKey) {
-            "َ" -> displayLabel = "◌َ"
-            "ِ" -> displayLabel = "◌ِ"
-            "ُ" -> displayLabel = "◌ُ"
-            "ّ" -> displayLabel = "◌ّ"
-            "ٚ" -> displayLabel = "◌ٚ"
-            "ْ" -> displayLabel = "◌ْ"
-            "ٝ" -> displayLabel = "◌ٝ"
             "SPACE", " " -> return "␣"
             "BACKSPACE" -> return "⌫"
             "ENTER" -> return "⏎"
@@ -466,7 +458,19 @@ class BalochiInputMethod : InputMethodService() {
         }
 
         val hint = longPressMappings[mainKey]?.firstOrNull() ?: return displayLabel
-        val spanText = SpannableString("$displayLabel $hint")
+        
+        var displayHint = hint
+        when (hint) {
+            "َ" -> displayHint = "◌َ"
+            "ِ" -> displayHint = "◌ِ"
+            "ُ" -> displayHint = "◌ُ"
+            "ّ" -> displayHint = "◌ّ"
+            "ٚ" -> displayHint = "◌ٚ"
+            "ْ" -> displayHint = "◌ْ"
+            "ٝ" -> displayHint = "◌ٝ"
+        }
+
+        val spanText = SpannableString("$displayLabel $displayHint")
         spanText.setSpan(AbsoluteSizeSpan(18, true), 0, displayLabel.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spanText.setSpan(ForegroundColorSpan(keyTextColor), 0, displayLabel.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         val hintStart = displayLabel.length + 1
@@ -478,7 +482,7 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun getRowsForMode() = when (keyboardLayoutMode) {
-        "balorabi" -> listOf(listOf("۱", "۲", "۳", "َ", "ِ", "ُ", "ّ", "ٚ", "ْ", "ٝ"), listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"), listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"), listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"), listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"))
+        "balorabi" -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"), listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"), listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"), listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"))
         "balotin" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"), listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"), listOf("SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "BACKSPACE"), listOf("?123", "GLOBE", "SPACE", ".", "ENTER"))
         "symbols1" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("+", "×", "÷", "=", "٪", "^", "!", "@", "#", "$"), listOf("/", "\\", "~", "*", "(", ")", "-", "_", "|", "&"), listOf("2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))
         else -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"), listOf("❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"), listOf("← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))

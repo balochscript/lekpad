@@ -11,7 +11,6 @@ import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
@@ -25,7 +24,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
-import android.widget.Button
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -37,13 +36,14 @@ class BalochiInputMethod : InputMethodService() {
 
     private lateinit var keyboardView: View
     private var suggestionBar: LinearLayout? = null
-    private var clipboardBar: LinearLayout? = null
+    private var keysContainer: LinearLayout? = null
+    private var clipboardFullView: LinearLayout? = null
+    private var clipboardListContainer: LinearLayout? = null
     private var isNightMode: Boolean = false
     
     private var keyboardLayoutMode: String = "balorabi" 
     private var isShiftActive: Boolean = false
 
-    // Cached Settings (برای جلوگیری از لگ)
     private var kbBgColor: Int = 0xFF0F172A.toInt()
     private var keyBgColor: Int = 0xFF1E293B.toInt()
     private var keyTextColor: Int = 0xFFFFFFFF.toInt()
@@ -62,33 +62,32 @@ class BalochiInputMethod : InputMethodService() {
 
     private var soundPool: SoundPool? = null
     private var soundId: Int = -1
-    private lateinit var audioManager: AudioManager
 
     private lateinit var clipboardManager: ClipboardManager
     private val MAX_CLIPBOARD_ITEMS = 40
     private val CLIPBOARD_EXPIRY_MS = TimeUnit.HOURS.toMillis(24)
 
-    // لیسنر برای گرفتن اتوماتیک متن‌های کپی شده
     private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
         if (clipboardManager.hasPrimaryClip() && clipboardManager.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
             val text = clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
             if (!text.isNullOrBlank()) {
                 saveToClipboardHistory(text)
-                updateWordPredictions("") // رفرش کردن نوار بالا
+                if (clipboardFullView?.visibility == View.VISIBLE) {
+                    populateClipboardFullView()
+                }
             }
         }
     }
 
-    // واژگان (بدون تغییر)
     private val balorabiVocab = listOf("اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج", "ڈُنگ", "ڈَل", "اِشک", "اݔدام", "بݔر", "اِسبݔت", "گَنش", "گُب", "گوارَگ", "ھئیک", "ھال", "ھَشت", "کِرر", "کَپپَگی", "لَھم", "لَشکَر", "مادَگ", "مار", "نَمیبگ", "نِھݔپَگ", "اُستُم", "اُستاز", "اۏلاک", "اۏشت", "پَتتَر", "پِت", "پُلل", "رُنگ", "راھشۏن", "سیاہ", "سَنگَت", "سُھل", "شاشک", "شَش", "شَھدَربرجاہ", "تَل", "تَلار", "ٹاک", "ٹراشو", "ھور", "وئیل", "واھَگ", "یَل", "زَھیر", "زِڈڈ", "زال", "ژانگ", "بوژ", "بلۏچ", "بلۏچستان", "بلۏچی", "سَلام", "والِک", "چونَے", "چونے", "مَن", "وشوں", "تَو", "هَں", "چہ", "هال", "اِنت", "وَش", "سَلامتے", "جۏڑی", "هَور", "جمبر", "استین", "استون", "گرند", "گُرۏک", "ترَمپ", "ترۏنگل", "گوات", "سَنگُل", "سُهر", "بیر", "گوارَگ", "هار", "کَور", "شݔپ", "لوڈ", "لَهڈ", "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", "وَڈݔنَگ", "وَڈݔنۏک", "جۏڈݔنَگ", "جۏڈݔنۏک", "بَنݔنَگ", "بَنݔنۏک", "بَنݔنتگیں", "اَڈ", "شَرر", "شؤک", "زَبَردَست", "مئی", "نن", "ھؤ", "چے", "کوئ", "کُجئ", "کجا", "کۏ", "کئ", "بیتَگ", "شُت", "آتک", "آتکَگ", "وَلا", "نامھُدا", "پوکو", "بگوَش", "ھُدایی", "مَھرنگ", "بݔکار", "دَزبَند", "دَزگوھار", "بۏگ", "مَٹ", "اوڈہ", "چُپت", "جاتیگ", "کَلمانٹ", "لُنڈ", "لَوَند", "چاپتال", "چَپورت", "ایماندار", "چاکَلݔٹ")
     private val balotinVocab = listOf("Ars", "Àmàd", "Àzmàn", "Àsbàr", "Baròt", "Romb", "Cànk", "Do càpī", "Dywàl", "Dràj", "Ďung", "Ďal", "Ešk", "Èdàm", "Bèr", "Ispèt", "Ganš", "Gub", "Gwàrag", "Haik", "Hàl", "Hašt", "Kirr", "Kappagī", "Lahm", "Laškar", "Màdag", "Màr", "Nambèg", "Nihèpag", "Ustum", "Ustàz", "Òlàk", "Òšt", "Pattar", "Pit", "Poll", "Rung", "Ràhšòn", "Siyàh", "Sangat", "Suhl", "Šàšk", "Šaš", "Šahdarbarjàh", "Tal", "Talàr", "Ťak", "Ťràšò", "Hur", "Wail", "Wàhag", "Yal", "Zahèr", "Ziďď", "Zàl", "Žàng", "Bòž", "Balòc", "Balòcestàn", "Balòcī", "Salàm", "Vàlaik", "Čònai", "Man", "Vašaon", "Tà", "Han", "Ce", "Hàl", "Ent", "Vaš", "Salàmati", "Jòďī", "Haur", "Jambar", "Estin", "Estun", "Grand", "Goròk", "Tramp", "Tròngal", "Guàt", "Sangol", "Sohr", "Bir", "Guàrag", "Hàr", "Kaur", "Šèp", "Luď", "Lahď", "Baččag", "Baččènag", "Baččènòk", "Bačchetagèn", "Baččèntag", "Baččòk", "Musàm", "Nimròc", "Waďènag", "Waďènòk", "Jòďènag", "Jòďènòk", "Banènag", "Banènòk", "Banèntagèn", "Aď", "Šarr", "Šauk", "Zabardast", "Mai", "Nan", "Hau", "Cè", "Kuae", "Kojae", "Koja", "Kò", "Kae", "Bitag", "Šot", "Àtk", "Àtkag", "Walla", "Nàmhoda", "Poko", "Beguaš", "Hodayi", "Mahrang", "Bèkàr", "Dazband", "Dazguhar", "Bòg", "Mať", "Oďe", "Copt", "Jàtig", "Kalmànť", "Lonď", "Lawand", "Càptàl", "Capurt", "Imàndàr", "Càkalèť")
     
     private val longPressMappings = mapOf(
-        "ت" to listOf("ث", "ط", "ّ"), "ج" to listOf("ح"), "چ" to listOf("خ"), "د" to listOf("ذ"), "س" to listOf("ص"),
-        "ز" to listOf("ض", "ظ"), "ا" to listOf("ع", "آ", "أ", "إ", "َ", "ِ", "ُ"), "گ" to listOf("غ"), "پ" to listOf("ف"),
-        "ک" to listOf("ق"), "ھ" to listOf("ہ", "هـ", "ح", "ه"), "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
+        "ت" to listOf("ث", "ط", "ّ"), "ج" to listOf("ح", "خ"), "چ" to listOf("خ"), "د" to listOf("ذ"), "س" to listOf("ص"),
+        "ز" to listOf("ض", "ظ"), "ا" to listOf("ع", "آ", "أ", "إ", "َ", "ِ", "ُ", "ّ", "ْ", "ٚ"), "گ" to listOf("غ"), 
+        "پ" to listOf("ف"), "ک" to listOf("ق", "خ"), "ھ" to listOf("ہ", "هـ", "ح", "ه"), "ء" to listOf("ع", "ءَ", "ءِ", "ءُ"),
         "و" to listOf("ؤ", "وْ"), "ۏ" to listOf("ۇ", "وُ"), "ی" to listOf("ئی", "ئ", "ۓ"), "ے/ݔ" to listOf("ݔ", "یٚ"),
-        "ن" to listOf("ں", "نٚ", "ْ"), "ر" to listOf("ڑ"), "ژ" to listOf("ظ"), "۔" to listOf("ـ", "—", "-"),
+        "ن" to listOf("ں", "نٚ", "ْ"), "ر" to listOf("ڑ"), "ژ" to listOf("ظ"), "ل" to listOf("ڷ"), "۔" to listOf("ـ", "—", "-"),
         "◀▶" to listOf("\u200C", "\u200D", "\u200B"), "a" to listOf("á", "à", "æ"), "d" to listOf("ď"),
         "g" to listOf("ĝ"), "i" to listOf("í", "ì"), "r" to listOf("ř"), "s" to listOf("š"),
         "t" to listOf("ť"), "u" to listOf("ú", "ù"), "z" to listOf("ž")
@@ -96,18 +95,17 @@ class BalochiInputMethod : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.addPrimaryClipChangedListener(clipboardListener)
         initSoundPool()
     }
 
-    // این تابع هر بار که کیبورد باز می‌شود اجرا می‌شود و رنگ‌های جدید را فوراً اعمال می‌کند
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         applyTheme()
         setupKeyboardLayout()
         updateWordPredictions("")
+        closeClipboardView()
     }
 
     override fun onDestroy() {
@@ -121,7 +119,7 @@ class BalochiInputMethod : InputMethodService() {
         try {
             soundPool = SoundPool.Builder().setMaxStreams(1).build()
             soundId = soundPool?.load(this, R.raw.key_click, 1) ?: -1
-        } catch (e: Exception) { soundId = -1 }
+        } catch (e: Exception) {}
     }
 
     override fun onCreateInputView(): View {
@@ -132,7 +130,16 @@ class BalochiInputMethod : InputMethodService() {
         keyboardView = inflater.inflate(R.layout.keyboard_view, null)
 
         suggestionBar = keyboardView.findViewById(R.id.suggestion_bar)
-        clipboardBar = keyboardView.findViewById(R.id.clipboard_bar)
+        keysContainer = keyboardView.findViewById(R.id.keys_container)
+        clipboardFullView = keyboardView.findViewById(R.id.clipboard_full_view)
+        clipboardListContainer = keyboardView.findViewById(R.id.clipboard_list_container)
+
+        keyboardView.findViewById<TextView>(R.id.btn_open_clipboard)?.setOnClickListener {
+            toggleClipboardView()
+        }
+        keyboardView.findViewById<TextView>(R.id.btn_close_clipboard)?.setOnClickListener {
+            closeClipboardView()
+        }
 
         try { amiriTypeface = Typeface.createFromAsset(assets, "flutter_assets/assets/fonts/Amiri-Regular.ttf") } catch (e: Exception) {}
 
@@ -143,7 +150,6 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun applyTheme() {
-        // خواندن داده‌ها از حافظه فقط موقع باز شدن کیبورد (حل مشکل لگ و تغییر آنی)
         try {
             val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             val kbBgHex = prefs.getString("flutter.kb_bg_color_hex", null)
@@ -155,10 +161,14 @@ class BalochiInputMethod : InputMethodService() {
             keyTextColor = if (keyTextHex != null) android.graphics.Color.parseColor(keyTextHex) else if (isNightMode) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
 
             isSoundEnabled = prefs.getBoolean("flutter.kb_sound_enabled", true)
-            soundVolume = prefs.getFloat("flutter.kb_sound_volume", 0.5f)
+            try { soundVolume = prefs.getFloat("flutter.kb_sound_volume", 0.5f) } catch (e: Exception) {
+                soundVolume = prefs.getString("flutter.kb_sound_volume", "0.5")?.toFloat() ?: 0.5f
+            }
         } catch (e: Exception) {}
         
         keyboardView.setBackgroundColor(kbBgColor)
+        clipboardFullView?.setBackgroundColor(kbBgColor)
+        keyboardView.findViewById<TextView>(R.id.btn_open_clipboard)?.setTextColor(keyTextColor)
     }
 
     private fun playKeyPressSound() {
@@ -167,15 +177,13 @@ class BalochiInputMethod : InputMethodService() {
             if (soundId != -1) {
                 soundPool?.play(soundId, soundVolume, soundVolume, 1, 0, 1.0f)
             } else {
-                // اگر فایل صوتی پیدا نشد، صدای استاندارد گوشی را پخش کن
-                audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, soundVolume)
+                (getSystemService(Context.AUDIO_SERVICE) as AudioManager).playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, soundVolume)
             }
         } catch (e: Exception) {}
     }
 
     private fun setupKeyboardLayout() {
-        val layoutContainer = keyboardView.findViewById<LinearLayout>(R.id.keys_container) ?: return
-        layoutContainer.removeAllViews()
+        keysContainer?.removeAllViews()
         val density = resources.displayMetrics.density
         val keyHeightPx = (48 * density).toInt()
 
@@ -190,7 +198,7 @@ class BalochiInputMethod : InputMethodService() {
             }
 
             for (key in row) {
-                val keyButton = Button(this).apply {
+                val keyView = TextView(this).apply {
                     var displayKey = key
                     if (keyboardLayoutMode == "balotin" && !isShiftActive && key.length == 1 && key[0].isLetter()) {
                         displayKey = key.lowercase()
@@ -198,7 +206,11 @@ class BalochiInputMethod : InputMethodService() {
                     
                     text = getSpannedKeyText(displayKey)
                     setTextColor(keyTextColor)
+                    gravity = Gravity.CENTER
                     setPadding(0, 0, 0, 0)
+                    includeFontPadding = false
+                    minWidth = 0
+                    minHeight = 0
                     
                     val currentKeyBg = when (key) {
                         "BACKSPACE", "⌫" -> if (isNightMode) 0xFF7F1D1D.toInt() else 0xFFFEE2E2.toInt()
@@ -217,7 +229,7 @@ class BalochiInputMethod : InputMethodService() {
                     if (amiriTypeface != null) typeface = amiriTypeface
                     
                     layoutParams = LinearLayout.LayoutParams(0, keyHeightPx, if (key == " " || key == "SPACE") 3.0f else 1.0f).apply {
-                        setMargins((2 * density).toInt(), (2 * density).toInt(), (2 * density).toInt(), (2 * density).toInt())
+                        setMargins((2 * density).toInt(), (3 * density).toInt(), (2 * density).toInt(), (3 * density).toInt())
                     }
 
                     if (key == "BACKSPACE") {
@@ -242,9 +254,9 @@ class BalochiInputMethod : InputMethodService() {
                         setOnLongClickListener { showLongPressPopup(this, key); true }
                     }
                 }
-                rowLayout.addView(keyButton)
+                rowLayout.addView(keyView)
             }
-            layoutContainer.addView(rowLayout)
+            keysContainer?.addView(rowLayout)
         }
     }
 
@@ -257,7 +269,15 @@ class BalochiInputMethod : InputMethodService() {
             "BACKSPACE", "⌫" -> { ic.deleteSurroundingText(1, 0); updateWordPredictions("") }
             "ENTER", "⏎", "مان", "Màn" -> { ic.commitText("\n", 1); updateWordPredictions("") }
             "GLOBE" -> { keyboardLayoutMode = if (keyboardLayoutMode == "balorabi") "balotin" else "balorabi"; setupKeyboardLayout() }
-            "⚙️" -> { try { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }) } catch (e: Exception) {} }
+            "⚙️" -> { 
+                try { 
+                    val intent = packageManager.getLaunchIntentForPackage(packageName)
+                    if (intent != null) {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        startActivity(intent)
+                    }
+                } catch (e: Exception) {} 
+            }
             "؟۱۲۳", "?123" -> { keyboardLayoutMode = "symbols1"; setupKeyboardLayout() }
             "2/2 →" -> { keyboardLayoutMode = "symbols2"; setupKeyboardLayout() }
             "← 1/2" -> { keyboardLayoutMode = "symbols1"; setupKeyboardLayout() }
@@ -282,28 +302,18 @@ class BalochiInputMethod : InputMethodService() {
 
     private fun updateWordPredictions(currentWord: String) {
         suggestionBar?.removeAllViews()
-        clipboardBar?.removeAllViews()
-        clipboardBar?.visibility = View.GONE
-        suggestionBar?.visibility = View.VISIBLE
-
-        // اگر چیزی تایپ نشده، تاریخچه کلیپ‌بورد را نمایش بده
-        if (currentWord.isEmpty() || currentWord.isBlank()) {
-            suggestionBar?.visibility = View.GONE
-            clipboardBar?.visibility = View.VISIBLE
-            showClipboardHistoryUI()
-            return
-        }
+        if (currentWord.isEmpty() || currentWord.isBlank()) return
 
         val vocabList = if (keyboardLayoutMode == "balorabi") balorabiVocab else balotinVocab
         val normalized = currentWord.replace("ݔ", "ے")
-        val predictions = vocabList.filter { it.replace("ݔ", "ے").startsWith(normalized, ignoreCase = true) }.take(4)
+        val predictions = vocabList.filter { it.replace("ݔ", "ے").startsWith(normalized, ignoreCase = true) }.take(5)
 
         for (word in predictions) {
             val suggestionView = TextView(this).apply {
                 text = word
                 textSize = 18f
                 if (amiriTypeface != null) typeface = amiriTypeface
-                setPadding(30, 10, 30, 10)
+                setPadding(24, 8, 24, 8)
                 setTextColor(keyTextColor)
                 setOnClickListener { 
                     val ic = currentInputConnection
@@ -317,8 +327,21 @@ class BalochiInputMethod : InputMethodService() {
         }
     }
 
-    // --- مدیریت پیشرفته کلیپ بورد ---
-    
+    private fun toggleClipboardView() {
+        if (clipboardFullView?.visibility == View.GONE) {
+            keysContainer?.visibility = View.GONE
+            clipboardFullView?.visibility = View.VISIBLE
+            populateClipboardFullView()
+        } else {
+            closeClipboardView()
+        }
+    }
+
+    private fun closeClipboardView() {
+        clipboardFullView?.visibility = View.GONE
+        keysContainer?.visibility = View.VISIBLE
+    }
+
     private fun saveToClipboardHistory(newText: String) {
         try {
             val prefs = getSharedPreferences("BalochiClipboard", Context.MODE_PRIVATE)
@@ -340,57 +363,61 @@ class BalochiInputMethod : InputMethodService() {
                 val text = item.getString("text")
                 val time = item.getLong("time")
                 
-                // حذف تکراری‌ها و قدیمی‌تر از ۲۴ ساعت
                 if (text != newText && (currentTime - time) < CLIPBOARD_EXPIRY_MS) {
                     newArray.put(item)
                     count++
                 }
             }
-            
             prefs.edit().putString("history", newArray.toString()).apply()
         } catch (e: Exception) {}
     }
 
-    private fun showClipboardHistoryUI() {
-        clipboardBar?.removeAllViews()
+    private fun populateClipboardFullView() {
+        clipboardListContainer?.removeAllViews()
         try {
             val prefs = getSharedPreferences("BalochiClipboard", Context.MODE_PRIVATE)
             val historyJson = prefs.getString("history", "[]")
             val array = JSONArray(historyJson)
             
-            if (array.length() == 0) return
+            if (array.length() == 0) {
+                clipboardListContainer?.addView(TextView(this).apply {
+                    text = "No clipboard history yet."
+                    setPadding(16, 32, 16, 32)
+                    gravity = Gravity.CENTER
+                    setTextColor(keyTextColor)
+                })
+                return
+            }
 
             for (i in 0 until array.length()) {
                 val item = array.getJSONObject(i)
                 val clipText = item.getString("text")
                 
                 val clipView = TextView(this).apply {
-                    val display = if (clipText.length > 15) clipText.take(12) + "..." else clipText
-                    text = "📋 $display"
-                    textSize = 14f
+                    text = clipText
+                    textSize = 16f
                     if (amiriTypeface != null) typeface = amiriTypeface
-                    setPadding(20, 10, 20, 10)
+                    setPadding(24, 24, 24, 24)
                     setTextColor(keyTextColor)
                     
                     background = GradientDrawable().apply {
                         setColor(keyBgColor)
-                        cornerRadius = 16f
-                        setStroke(1, 0x44D97706)
+                        cornerRadius = 12f
                     }
                     
-                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(8, 0, 8, 0) }
+                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 16) }
                     
                     setOnClickListener {
                         currentInputConnection?.commitText(clipText, 1)
                         playKeyPressSound()
+                        closeClipboardView()
                     }
                 }
-                clipboardBar?.addView(clipView)
+                clipboardListContainer?.addView(clipView)
             }
         } catch (e: Exception) {}
     }
 
-    // توابع کمکی 
     private fun getSpannedKeyText(mainKey: String): CharSequence {
         if (mainKey.length > 1 || mainKey == " ") {
             return when (mainKey) { "SPACE", " " -> "␣"; "BACKSPACE" -> "⌫"; "ENTER" -> "⏎"; "GLOBE" -> "🌐"; "SHIFT" -> "⬆"; else -> mainKey }
@@ -417,21 +444,53 @@ class BalochiInputMethod : InputMethodService() {
     private fun showLongPressPopup(anchorView: View, key: String) {
         val alternatives = longPressMappings[key] ?: return
         try {
-            val popupView = (getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.popup_keyboard, null) as LinearLayout
-            popupView.setBackgroundColor(keyBgColor)
-            popupView.setPadding(16, 12, 16, 12)
-            val popupWindow = PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+            val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val popupRoot = inflater.inflate(R.layout.popup_keyboard, null) as HorizontalScrollView
+            val popupContainer = popupRoot.findViewById<LinearLayout>(R.id.popup_container)
+            
+            popupRoot.background = GradientDrawable().apply {
+                setColor(keyBgColor)
+                cornerRadius = 24f
+                setStroke(2, 0xFFD97706.toInt()) 
+            }
+            
+            val popupWindow = PopupWindow(popupRoot, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true)
+            popupWindow.elevation = 8f
 
+            val density = resources.displayMetrics.density
+            
             for (alt in alternatives) {
-                popupView.addView(Button(this).apply {
-                    text = alt; textSize = 20f; setTextColor(keyTextColor)
+                popupContainer.addView(TextView(this).apply {
+                    text = alt
+                    textSize = 24f
+                    setTextColor(keyTextColor)
+                    gravity = Gravity.CENTER
                     if (amiriTypeface != null) typeface = amiriTypeface
-                    background = GradientDrawable().apply { setColor(kbBgColor); cornerRadius = 12f; setStroke(2, 0xFFD97706.toInt()) }
-                    setPadding(24, 12, 24, 12)
-                    setOnClickListener { currentInputConnection?.commitText(alt, 1); playKeyPressSound(); popupWindow.dismiss() }
+                    
+                    background = GradientDrawable().apply { 
+                        setColor(kbBgColor)
+                        cornerRadius = 16f 
+                    }
+                    
+                    setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+                    
+                    layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { 
+                        setMargins((4 * density).toInt(), 0, (4 * density).toInt(), 0) 
+                    }
+                    
+                    setOnClickListener { 
+                        currentInputConnection?.commitText(alt, 1)
+                        playKeyPressSound()
+                        popupWindow.dismiss() 
+                    }
                 })
             }
-            popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 120, Gravity.CENTER)
+            
+            popupRoot.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+            val popupWidth = popupRoot.measuredWidth
+            val xOffset = (anchorView.width - popupWidth) / 2
+            
+            popupWindow.showAsDropDown(anchorView, xOffset, -anchorView.height - (65 * density).toInt(), Gravity.NO_GRAVITY)
         } catch (e: Exception) {}
     }
 }

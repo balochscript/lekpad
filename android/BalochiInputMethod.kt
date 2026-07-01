@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
@@ -54,7 +55,13 @@ class BalochiInputMethod : InputMethodService() {
     private var backspaceHandler: Handler? = null
     private val backspaceRunnable = object : Runnable {
         override fun run() {
-            currentInputConnection?.deleteSurroundingText(1, 0)
+            val ic = currentInputConnection
+            val selectedText = ic?.getSelectedText(0)
+            if (TextUtils.isEmpty(selectedText)) {
+                ic?.deleteSurroundingText(1, 0)
+            } else {
+                ic?.commitText("", 1)
+            }
             playKeyPressSound()
             backspaceHandler?.postDelayed(this, 50)
         }
@@ -265,7 +272,13 @@ class BalochiInputMethod : InputMethodService() {
                         setOnTouchListener { _, event ->
                             when (event.action) {
                                 MotionEvent.ACTION_DOWN -> {
-                                    currentInputConnection?.deleteSurroundingText(1, 0)
+                                    val ic = currentInputConnection
+                                    val selectedText = ic?.getSelectedText(0)
+                                    if (TextUtils.isEmpty(selectedText)) {
+                                        ic?.deleteSurroundingText(1, 0)
+                                    } else {
+                                        ic?.commitText("", 1)
+                                    }
                                     playKeyPressSound()
                                     if (backspaceHandler == null) backspaceHandler = Handler(Looper.getMainLooper())
                                     backspaceHandler?.postDelayed(backspaceRunnable, 500)
@@ -295,7 +308,15 @@ class BalochiInputMethod : InputMethodService() {
 
         when (key) {
             "SPACE", " " -> { ic.commitText(" ", 1); updateWordPredictions("") }
-            "BACKSPACE", "⌫" -> { ic.deleteSurroundingText(1, 0); updateWordPredictions("") }
+            "BACKSPACE", "⌫" -> { 
+                val selectedText = ic.getSelectedText(0)
+                if (TextUtils.isEmpty(selectedText)) {
+                    ic.deleteSurroundingText(1, 0)
+                } else {
+                    ic.commitText("", 1)
+                }
+                updateWordPredictions("") 
+            }
             "ENTER", "⏎", "مان", "Màn" -> { ic.commitText("\n", 1); updateWordPredictions("") }
             "GLOBE" -> { keyboardLayoutMode = if (keyboardLayoutMode == "balorabi") "balotin" else "balorabi"; setupKeyboardLayout() }
             "⚙️" -> { 
@@ -425,6 +446,8 @@ class BalochiInputMethod : InputMethodService() {
                 val clipView = TextView(this).apply {
                     text = clipText
                     textSize = 16f
+                    maxLines = 2
+                    ellipsize = TextUtils.TruncateAt.END
                     if (amiriTypeface != null) typeface = amiriTypeface
                     setPadding(24, 24, 24, 24)
                     setTextColor(keyTextColor)

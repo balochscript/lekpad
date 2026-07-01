@@ -1,17 +1,21 @@
-name: Lekpad Release Workflow
+name: Manual Lekpad Release
 
+# این بخش باعث می‌شود یک دکمه در تب Actions گیت‌هاب ظاهر شود
 on:
-  push:
-    tags:
-      - 'v*' # Triggers when a tag like v1.0.0, v1.1, etc. is pushed
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'شماره نسخه را وارد کنید (مثلا v1.0.0)'
+        required: true
+        default: 'v1.0.0'
 
 permissions:
-  contents: write # Required to create GitHub Releases
+  contents: write # برای ساختن ریلیز در گیت‌هاب الزامی است
 
 jobs:
   build-and-release:
     name: Build & Publish Release Artifacts
-    runs-on: macos-latest # We use macOS to build both iOS and Android in one run
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Lekpad repository
@@ -102,6 +106,8 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.version_tag }}
+          name: Lekpad Version ${{ github.event.inputs.version_tag }}
           files: |
             Lekpad-android-release.apk
             Lekpad-android-release.aab

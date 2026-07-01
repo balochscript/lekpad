@@ -82,17 +82,13 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         "ل": ["ڷ", "ڵ"],
         "۔": ["ـ", "—", "-"],
         "◀▶": ["\u{200C}", "\u{200D}", "\u{200B}"],
-        "a": ["á", "à", "æ", "â", "ä"],
-        "d": ["ď"],
-        "e": ["é", "è", "ê", "ë"],
+        "a": ["á", "æ", "â", "ä"],
+        "e": ["é", "ê", "ë"],
         "g": ["ĝ"],
         "i": ["í", "ì", "î", "ï"],
-        "o": ["ò", "ó", "ô", "ö"],
+        "o": ["ó", "ô", "ö"],
         "r": ["ř"],
-        "s": ["š"],
-        "t": ["ť"],
-        "u": ["ú", "ù", "û", "ü"],
-        "z": ["ž"]
+        "u": ["ú", "ù", "û", "ü"]
     ]
 
     override func viewDidLoad() {
@@ -211,8 +207,16 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
             return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
         }
 
-        guard let alternatives = longPressMappings[mainKey], let hint = alternatives.first else {
-            return NSAttributedString(string: mainKey, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
+        let lookupKey = mainKey.lowercased()
+        let alternatives = longPressMappings[mainKey] ?? longPressMappings[lookupKey]
+        
+        guard let alts = alternatives, let hintRaw = alts.first else {
+            return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
+        }
+        
+        var hint = hintRaw
+        if keyboardLayoutMode == "balotin" && isShiftActive {
+            hint = hintRaw.uppercased()
         }
         
         let mainFont = UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)
@@ -455,9 +459,13 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
               let mainText = button.currentAttributedTitle?.string ?? button.titleLabel?.text else { return }
 
         let rawKey = mainText.components(separatedBy: " ").first ?? ""
-        let key = rawKey.replacingOccurrences(of: "◌", with: "")
+        var key = rawKey.replacingOccurrences(of: "◌", with: "")
+        if key == "␣" { key = " " }
         
-        guard let alternatives = longPressMappings[key == "␣" ? " " : key] else { return }
+        let lookupKey = key.lowercased()
+        guard let alternativesRaw = longPressMappings[key] ?? longPressMappings[lookupKey] else { return }
+        
+        let alternatives = (keyboardLayoutMode == "balotin" && isShiftActive) ? alternativesRaw.map { $0.uppercased() } : alternativesRaw
 
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         

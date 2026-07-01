@@ -107,6 +107,10 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         setupTopBar()
         setupKeyboardRows()
         updateTheme()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         updateClipboardSuggestion()
     }
 

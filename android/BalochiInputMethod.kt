@@ -133,6 +133,15 @@ class BalochiInputMethod : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        try {
+            if (clipboardManager.hasPrimaryClip() && clipboardManager.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
+                val text = clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
+                if (!text.isNullOrBlank()) {
+                    saveToClipboardHistory(text)
+                }
+            }
+        } catch (e: Exception) {}
+        
         applyTheme()
         setupKeyboardLayout()
         updateWordPredictions("")

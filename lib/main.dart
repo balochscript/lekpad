@@ -284,28 +284,30 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
     final text = _textController.text;
     final selection = _textController.selection;
     
-    String finalChars = chars;
-    String modifiedText = text;
-    int cursorOffset = selection.start;
+    int start = selection.start >= 0 ? selection.start : text.length;
+    int end = selection.end >= 0 ? selection.end : text.length;
 
+    String finalChars = chars;
     if (widget.keyboardMode == 'balotin' && !_isShiftActive) {
       finalChars = chars.toLowerCase();
     }
 
-    if (selection.start > 1 && 
-        text[selection.start - 1] == ' ' && 
-        (text[selection.start - 2] == 'ه' || text[selection.start - 2] == 'ہ' || text[selection.start - 2] == 'ھ' || text[selection.start - 2] == 'ے') &&
+    String modifiedText = text;
+
+    if (start == end && start > 1 && 
+        text[start - 1] == ' ' && 
+        (text[start - 2] == 'ه' || text[start - 2] == 'ہ' || text[start - 2] == 'ھ' || text[start - 2] == 'ے') &&
         chars == 'ی') {
-      modifiedText = text.replaceRange(selection.start - 1, selection.start, '\u200C');
+      modifiedText = text.replaceRange(start - 1, start, '\u200C');
     }
 
-    if (selection.start > 0 && text[selection.start - 1] == 'ے' && chars.isNotEmpty && !_isPunctuation(chars)) {
-      modifiedText = text.replaceRange(selection.start - 1, selection.start, 'ݔ');
+    if (start == end && start > 0 && text[start - 1] == 'ے' && chars.isNotEmpty && !_isPunctuation(chars)) {
+      modifiedText = text.replaceRange(start - 1, start, 'ݔ');
     }
 
-    final newText = modifiedText.replaceRange(cursorOffset, selection.end, finalChars);
+    final newText = modifiedText.replaceRange(start, end, finalChars);
     _textController.text = newText;
-    _textController.selection = TextSelection.collapsed(offset: cursorOffset + finalChars.length);
+    _textController.selection = TextSelection.collapsed(offset: start + finalChars.length);
     _playLocalClickSound();
   }
 
@@ -326,23 +328,40 @@ class _KeyboardDashboardState extends State<KeyboardDashboard> {
   void _backspace() {
     final text = _textController.text;
     final selection = _textController.selection;
-    if (selection.start > 0) {
-      final newText = text.replaceRange(selection.start - 1, selection.end, '');
+    
+    int start = selection.start >= 0 ? selection.start : text.length;
+    int end = selection.end >= 0 ? selection.end : text.length;
+
+    if (start != end) {
+      final newText = text.replaceRange(start, end, '');
       _textController.text = newText;
-      _textController.selection = TextSelection.collapsed(offset: selection.start - 1);
+      _textController.selection = TextSelection.collapsed(offset: start);
+    } else if (start > 0) {
+      final newText = text.replaceRange(start - 1, start, '');
+      _textController.text = newText;
+      _textController.selection = TextSelection.collapsed(offset: start - 1);
     }
     _playLocalClickSound();
   }
 
   void _replaceLastWord(String word) {
     final text = _textController.text;
-    final words = text.split(' ');
-    if (words.isNotEmpty) {
-      words.removeLast();
+    final selection = _textController.selection;
+    
+    int start = selection.start >= 0 ? selection.start : text.length;
+    String textBeforeCursor = text.substring(0, start);
+    List<String> wordsBefore = textBeforeCursor.split(' ');
+    
+    if (wordsBefore.isNotEmpty) {
+      wordsBefore.removeLast();
     }
-    words.add(word);
-    _textController.text = '${words.join(' ')} ';
-    _textController.selection = TextSelection.collapsed(offset: _textController.text.length);
+    wordsBefore.add(word);
+    
+    String newTextBefore = '${wordsBefore.join(' ')} ';
+    String newText = newTextBefore + text.substring(start);
+    
+    _textController.text = newText;
+    _textController.selection = TextSelection.collapsed(offset: newTextBefore.length);
     _playLocalClickSound();
   }
 

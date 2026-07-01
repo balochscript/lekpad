@@ -75,15 +75,7 @@ class BalochiInputMethod : InputMethodService() {
     private val CLIPBOARD_EXPIRY_MS = TimeUnit.HOURS.toMillis(24)
 
     private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
-        if (clipboardManager.hasPrimaryClip() && clipboardManager.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
-            val text = clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
-            if (!text.isNullOrBlank()) {
-                saveToClipboardHistory(text)
-                if (clipboardFullView?.visibility == View.VISIBLE) {
-                    populateClipboardFullView()
-                }
-            }
-        }
+        checkAndSaveClipboard()
     }
 
     private val balorabiVocab = listOf("اَرس", "آماد", "آسمان", "آسبار", "بَرۏت", "رُمب", "چانٚک", "دو چاپی", "دیوال", "دراج", "ڈُنگ", "ڈَل", "اِشک", "اݔدام", "بݔر", "اِسبݔت", "گَنش", "گُب", "گوارَگ", "ھئیک", "ھال", "ھَشت", "کِرر", "کَپپَگی", "لَھم", "لَشکَر", "مادَگ", "مار", "نَمیبگ", "نِھݔپَگ", "اُستُم", "اُستاز", "اۏلاک", "اۏشت", "پَتتَر", "پِت", "پُلل", "رُنگ", "راھشۏن", "سیاہ", "سَنگَت", "سُھل", "شاشک", "شَش", "شَھدَربرجاہ", "تَل", "تَلار", "ٹاک", "ٹراشو", "ھور", "وئیل", "واھَگ", "یَل", "زَھیر", "زِڈڈ", "زال", "ژانگ", "بوژ", "بلۏچ", "بلۏچستان", "بلۏچی", "سَلام", "والِک", "چونَے", "چونے", "مَن", "وشوں", "تَو", "هَں", "چہ", "هال", "اِنت", "وَش", "سَلامتے", "جۏڑی", "هَور", "جمبر", "استین", "استون", "گرند", "گُرۏک", "ترَمپ", "ترۏنگل", "گوات", "سَنگُل", "سُهر", "بیر", "گوارَگ", "هار", "کَور", "شݔپ", "لوڈ", "لَهڈ", "بچَّگ", "بچّنَگ", "بچّنۏک", "بچِّتگیں", "بچّنتگ", "بچّۏک", "مُسام", "نِمرۏچ", "وَڈݔنَگ", "وَڈݔنۏک", "جۏڈݔنَگ", "جۏڈݔنۏک", "بَنݔنَگ", "بَنݔنۏک", "بَنݔنتگیں", "اَڈ", "شَرر", "شؤک", "زَبَردَست", "مئی", "نن", "ھؤ", "چے", "کوئ", "کُجئ", "کجا", "کۏ", "کئ", "بیتَگ", "شُت", "آتک", "آتکَگ", "وَلا", "نامھُدا", "پوکو", "بگوَش", "ھُدایی", "مَھرنگ", "بݔکار", "دَزبَند", "دَزگوھار", "بۏگ", "مَٹ", "اوڈہ", "چُپت", "جاتیگ", "کَلمانٹ", "لُنڈ", "لَوَند", "چاپتال", "چَپورت", "ایماندار", "چاکَلݔٹ")
@@ -111,17 +103,13 @@ class BalochiInputMethod : InputMethodService() {
         "ل" to listOf("ڷ", "ڵ"), 
         "۔" to listOf("ـ", "—", "-"),
         "◀▶" to listOf("\u200C", "\u200D", "\u200B"), 
-        "a" to listOf("á", "à", "æ", "â", "ä"), 
-        "d" to listOf("ď"),
-        "e" to listOf("é", "è", "ê", "ë"),
+        "a" to listOf("á", "æ", "â", "ä"), 
+        "e" to listOf("é", "ê", "ë"),
         "g" to listOf("ĝ"), 
         "i" to listOf("í", "ì", "î", "ï"), 
-        "o" to listOf("ò", "ó", "ô", "ö"),
+        "o" to listOf("ó", "ô", "ö"),
         "r" to listOf("ř"), 
-        "s" to listOf("š"),
-        "t" to listOf("ť"), 
-        "u" to listOf("ú", "ù", "û", "ü"), 
-        "z" to listOf("ž")
+        "u" to listOf("ú", "ù", "û", "ü")
     )
 
     override fun onCreate() {
@@ -131,17 +119,24 @@ class BalochiInputMethod : InputMethodService() {
         initSoundPool()
     }
 
-    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
-        super.onStartInputView(info, restarting)
+    private fun checkAndSaveClipboard() {
         try {
-            if (clipboardManager.hasPrimaryClip() && clipboardManager.primaryClipDescription?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
-                val text = clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
+            if (clipboardManager.hasPrimaryClip()) {
+                val item = clipboardManager.primaryClip?.getItemAt(0)
+                val text = item?.coerceToText(this)?.toString()
                 if (!text.isNullOrBlank()) {
                     saveToClipboardHistory(text)
+                    if (clipboardFullView?.visibility == View.VISIBLE) {
+                        populateClipboardFullView()
+                    }
                 }
             }
         } catch (e: Exception) {}
-        
+    }
+
+    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        checkAndSaveClipboard()
         applyTheme()
         setupKeyboardLayout()
         updateWordPredictions("")
@@ -489,8 +484,14 @@ class BalochiInputMethod : InputMethodService() {
             "SHIFT" -> return "⬆"
         }
 
-        val hint = longPressMappings[mainKey]?.firstOrNull() ?: return displayLabel
+        val lookupKey = mainKey.lowercase()
+        val hintRaw = longPressMappings[mainKey]?.firstOrNull() ?: longPressMappings[lookupKey]?.firstOrNull() ?: return displayLabel
         
+        var hint = hintRaw
+        if (keyboardLayoutMode == "balotin" && isShiftActive) {
+            hint = hintRaw.uppercase()
+        }
+
         var displayHint = hint
         when (hint) {
             "َ" -> displayHint = "◌َ"
@@ -520,8 +521,14 @@ class BalochiInputMethod : InputMethodService() {
         else -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"), listOf("❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"), listOf("← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))
     }
 
-    private fun showLongPressPopup(anchorView: View, key: String) {
-        val alternatives = longPressMappings[key] ?: return
+    private fun showLongPressPopup(anchorView: View, originalKey: String) {
+        val lookupKey = originalKey.lowercase()
+        var alternatives = longPressMappings[originalKey] ?: longPressMappings[lookupKey] ?: return
+        
+        if (keyboardLayoutMode == "balotin" && isShiftActive) {
+            alternatives = alternatives.map { it.uppercase() }
+        }
+
         try {
             val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val popupRoot = inflater.inflate(R.layout.popup_keyboard, null) as HorizontalScrollView

@@ -1,0 +1,111 @@
+name: Lekpad Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers when a tag like v1.0.0, v1.1, etc. is pushed
+
+permissions:
+  contents: write # Required to create GitHub Releases
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release Artifacts
+    runs-on: macos-latest # We use macOS to build both iOS and Android in one run
+
+    steps:
+      - name: Checkout Lekpad repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Scaffold Flutter project
+        run: |
+          mkdir -p temp_custom/android temp_custom/ios temp_custom/lib temp_custom/scripts temp_custom/images temp_custom/assets
+          [ -d "lib" ] && mv lib/* temp_custom/lib/ || true
+          [ -d "android" ] && mv android/* temp_custom/android/ || true
+          [ -d "ios" ] && mv ios/* temp_custom/ios/ || true
+          [ -d "scripts" ] && mv scripts/* temp_custom/scripts/ || true
+          [ -d "images" ] && mv images/* temp_custom/images/ || true
+          [ -d "assets" ] && mv assets/* temp_custom/assets/ || true
+          [ -f "pubspec.yaml" ] && mv pubspec.yaml temp_custom/ || true
+          
+          rm -rf android ios lib scripts images assets
+          
+          flutter create --org bc.lekpad --project-name balochi lekpad_scaffold
+          mv lekpad_scaffold/* .
+          mv lekpad_scaffold/.[!.]* . || true
+          rm -rf lekpad_scaffold
+          
+          mkdir -p lib scripts images assets
+          [ -d "temp_custom/lib" ] && cp -r temp_custom/lib/* lib/ || true
+          [ -d "temp_custom/scripts" ] && cp -r temp_custom/scripts/* scripts/ || true
+          [ -d "temp_custom/images" ] && cp -r temp_custom/images/* images/ || true
+          [ -d "temp_custom/assets" ] && cp -r temp_custom/assets/* assets/ || true
+          [ -f "temp_custom/pubspec.yaml" ] && cp temp_custom/pubspec.yaml . || true
+          
+          # Setup Android Native
+          mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
+          cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
+          cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
+          mkdir -p android/app/src/main/res/xml layout raw
+          cp temp_custom/android/app/src/main/res/xml/method.xml android/app/src/main/res/xml/ || true
+          cp temp_custom/android/app/src/main/res/layout/keyboard_view.xml android/app/src/main/res/layout/ || true
+          cp temp_custom/android/app/src/main/res/layout/popup_keyboard.xml android/app/src/main/res/layout/ || true
+          if [ -f "assets/sounds/key_click.mp3" ]; then cp assets/sounds/key_click.mp3 android/app/src/main/res/raw/ || true; fi
+          python scripts/inject_android.py
+          
+          # Setup iOS Native
+          cp temp_custom/ios/KeyboardViewController.swift ios/ || true
+          gem install xcodeproj
+          ruby scripts/setup_ios.rb
+          
+          # Download Fonts
+          mkdir -p assets/fonts
+          curl -f -L -o assets/fonts/Amiri-Regular.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Regular.ttf || true
+          curl -f -L -o assets/fonts/Amiri-Bold.ttf https://github.com/google/fonts/raw/main/ofl/amiri/Amiri-Bold.ttf || true
+          
+          flutter pub add audioplayers shared_preferences flutter_colorpicker
+          flutter pub get
+          dart run flutter_launcher_icons
+          
+          # Fix Android SDK versions
+          sed -i '' 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle.kts || true
+          sed -i '' 's/targetSdk = flutter.targetSdkVersion/targetSdk = 36/g' android/app/build.gradle.kts || true
+          sed -i '' 's/minSdk = flutter.minSdkVersion/minSdk = 21/g' android/app/build.gradle.kts || true
+
+      - name: Build Android Artifacts
+        run: |
+          flutter build apk --release
+          flutter build appbundle --release
+          mv build/app/outputs/flutter-apk/app-release.apk Lekpad-android-release.apk
+          mv build/app/outputs/bundle/release/app-release.aab Lekpad-android-release.aab
+
+      - name: Build iOS IPA (Unsigned)
+        run: |
+          flutter build ios --release --no-codesign
+          mkdir -p Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -r Lekpad-iOS-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Lekpad-android-release.apk
+            Lekpad-android-release.aab
+            Lekpad-iOS-unsigned.ipa
+          draft: false
+          prerelease: false
+          generate_release_notes: true

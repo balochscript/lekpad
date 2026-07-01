@@ -1,6 +1,5 @@
 name: Manual Lekpad Release
 
-# این بخش باعث می‌شود یک دکمه در تب Actions گیت‌هاب ظاهر شود
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +9,7 @@ on:
         default: 'v1.0.0'
 
 permissions:
-  contents: write # برای ساختن ریلیز در گیت‌هاب الزامی است
+  contents: write
 
 jobs:
   build-and-release:
@@ -62,11 +61,13 @@ jobs:
           mkdir -p android/app/src/main/kotlin/bc/lekpad/balochi
           cp temp_custom/android/BalochiInputMethod.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
           cp temp_custom/android/MainActivity.kt android/app/src/main/kotlin/bc/lekpad/balochi/ || true
-          mkdir -p android/app/src/main/res/xml layout raw
-          cp temp_custom/android/app/src/main/res/xml/method.xml android/app/src/main/res/xml/ || true
-          cp temp_custom/android/app/src/main/res/layout/keyboard_view.xml android/app/src/main/res/layout/ || true
-          cp temp_custom/android/app/src/main/res/layout/popup_keyboard.xml android/app/src/main/res/layout/ || true
-          if [ -f "assets/sounds/key_click.mp3" ]; then cp assets/sounds/key_click.mp3 android/app/src/main/res/raw/ || true; fi
+          
+          # Fix: Copy entire res folder to ensure layout, raw, and xml are correctly placed
+          if [ -d "temp_custom/android/app/src/main/res" ]; then
+              mkdir -p android/app/src/main/res
+              cp -r temp_custom/android/app/src/main/res/* android/app/src/main/res/ || true
+          fi
+          
           python scripts/inject_android.py
           
           # Setup iOS Native

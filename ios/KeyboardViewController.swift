@@ -196,14 +196,14 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         switch mainKey {
             case "SPACE", " ": displayLabel = "␣"
             case "BACKSPACE", "⌫": displayLabel = "⌫"
-            case "ENTER", "⏎", "مان", "Màn": displayLabel = "⏎"
+            case "⏎": displayLabel = "⏎"
             case "GLOBE": displayLabel = "🌐"
             case "SHIFT": displayLabel = "⬆"
             case "⚙️": displayLabel = "⚙️"
             default: break
         }
         
-        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "ENTER" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "⏎" || mainKey == "مان" || mainKey == "Màn" || mainKey == "؟۱۲۳" || mainKey == "?123" {
+        if mainKey == " " || mainKey == "SPACE" || mainKey == "BACKSPACE" || mainKey == "⏎" || mainKey == "GLOBE" || mainKey == "SHIFT" || mainKey == "◀▶" || mainKey == "⚙️" || mainKey == "← 1/2" || mainKey == "2/2 →" || mainKey == "اب/ABC" || mainKey == "⌫" || mainKey == "؟۱۲۳" || mainKey == "?123" {
             return NSAttributedString(string: displayLabel, attributes: [.foregroundColor: textColor, .font: UIFont(name: "Amiri", size: 18) ?? UIFont.systemFont(ofSize: 18)])
         }
 
@@ -262,32 +262,32 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"],
                     ["ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"],
-                    ["⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"],
-                    ["؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"]
+                    ["⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"],
+                    ["؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "⏎"]
                 ]
             case "balotin":
                 return [
                     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
                     ["À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"],
                     ["A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"],
-                    ["SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "BACKSPACE"],
-                    ["?123", "GLOBE", "SPACE", ".", "ENTER"]
+                    ["SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"],
+                    ["?123", "GLOBE", "SPACE", ".", "⏎"]
                 ]
             case "symbols1":
                 return [
                     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
                     ["+", "×", "÷", "=", "٪", "^", "!", "@", "#", "$"],
                     ["/", "\\", "~", "*", "(", ")", "-", "_", "|", "&"],
-                    ["2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"],
-                    ["اب/ABC", "SPACE", "ENTER"]
+                    ["2/2 →", "[", "]", "{", "}", "<", ">", "❂", "⌫"],
+                    ["اب/ABC", "SPACE", "⏎"]
                 ]
             default:
                 return [
                     ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"],
                     ["،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"],
                     ["❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"],
-                    ["← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "BACKSPACE"],
-                    ["اب/ABC", "SPACE", "ENTER"]
+                    ["← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "⌫"],
+                    ["اب/ABC", "SPACE", "⏎"]
                 ]
             }
         }()
@@ -336,7 +336,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                 switch key {
                 case "BACKSPACE", "⌫":
                     currentKeyBg = UIColor(red: 0.5, green: 0.11, blue: 0.11, alpha: 1.0)
-                case "ENTER", "⏎":
+                case "⏎":
                     currentKeyBg = UIColor(red: 0.02, green: 0.31, blue: 0.23, alpha: 1.0)
                 case "⚙️":
                     currentKeyBg = UIColor(red: 0.28, green: 0.33, blue: 0.41, alpha: 1.0)
@@ -355,7 +355,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
                     nonSpaceButtons.append(button)
                 }
                 
-                if key == "BACKSPACE" {
+                if key == "BACKSPACE" || key == "⌫" {
                     button.addTarget(self, action: #selector(backspaceDown), for: .touchDown)
                     button.addTarget(self, action: #selector(backspaceUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
                 } else {
@@ -402,7 +402,7 @@ class KeyboardViewController: UIInputViewController, UIInputViewAudioFeedback {
         case "⌫", "BACKSPACE":
             proxy.deleteBackward()
             updatePredictions("")
-        case "⏎", "ENTER", "مان", "Màn":
+        case "⏎":
             proxy.insertText("\n")
             updatePredictions("")
         case "🌐", "GLOBE":

@@ -1,6 +1,5 @@
 package bc.lekpad.balochi
 
-import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -254,7 +253,7 @@ class BalochiInputMethod : InputMethodService() {
                     
                     val currentKeyBg = when (key) {
                         "BACKSPACE", "⌫" -> if (isNightMode) 0xFF7F1D1D.toInt() else 0xFFFEE2E2.toInt()
-                        "ENTER", "⏎", "مان", "Màn" -> if (isNightMode) 0xFF064E3B.toInt() else 0xFFD1FAE5.toInt()
+                        "⏎" -> if (isNightMode) 0xFF064E3B.toInt() else 0xFFD1FAE5.toInt()
                         "⚙️" -> if (isNightMode) 0xFF475569.toInt() else 0xFFE2E8F0.toInt()
                         "SPACE", " " -> if (isNightMode) 0xFF334155.toInt() else 0xFFCBD5E1.toInt()
                         else -> keyBgColor
@@ -272,7 +271,7 @@ class BalochiInputMethod : InputMethodService() {
                         setMargins((2 * density).toInt(), (3 * density).toInt(), (2 * density).toInt(), (3 * density).toInt())
                     }
 
-                    if (key == "BACKSPACE") {
+                    if (key == "BACKSPACE" || key == "⌫") {
                         setOnTouchListener { _, event ->
                             when (event.action) {
                                 MotionEvent.ACTION_DOWN -> {
@@ -321,7 +320,16 @@ class BalochiInputMethod : InputMethodService() {
                 }
                 updateWordPredictions("") 
             }
-            "ENTER", "⏎", "مان", "Màn" -> { ic.commitText("\n", 1); updateWordPredictions("") }
+            "⏎" -> {
+                val editorInfo = currentInputEditorInfo
+                val action = editorInfo?.imeOptions?.and(EditorInfo.IME_MASK_ACTION)
+                if (action != null && action != EditorInfo.IME_ACTION_NONE && action != EditorInfo.IME_ACTION_UNSPECIFIED) {
+                    ic.performEditorAction(action)
+                } else {
+                    ic.commitText("\n", 1)
+                }
+                updateWordPredictions("")
+            }
             "GLOBE" -> { keyboardLayoutMode = if (keyboardLayoutMode == "balorabi") "balotin" else "balorabi"; setupKeyboardLayout() }
             "⚙️" -> { 
                 try { 
@@ -478,10 +486,10 @@ class BalochiInputMethod : InputMethodService() {
         var displayLabel = mainKey
         when (mainKey) {
             "SPACE", " " -> return "␣"
-            "BACKSPACE" -> return "⌫"
-            "ENTER" -> return "⏎"
+            "BACKSPACE", "⌫" -> return "⌫"
             "GLOBE" -> return "🌐"
-            "SHIFT" -> return "⬆"
+            "SHIFT", "⬆" -> return "⬆"
+            "⏎" -> return "⏎"
         }
 
         val lookupKey = mainKey.lowercase()
@@ -515,10 +523,10 @@ class BalochiInputMethod : InputMethodService() {
     }
 
     private fun getRowsForMode() = when (keyboardLayoutMode) {
-        "balorabi" -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"), listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"), listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "BACKSPACE"), listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "ENTER"))
-        "balotin" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"), listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"), listOf("SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "BACKSPACE"), listOf("?123", "GLOBE", "SPACE", ".", "ENTER"))
-        "symbols1" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("+", "×", "÷", "=", "٪", "^", "!", "@", "#", "$"), listOf("/", "\\", "~", "*", "(", ")", "-", "_", "|", "&"), listOf("2/2 →", "[", "]", "{", "}", "<", ">", "❂", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))
-        else -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"), listOf("❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"), listOf("← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "BACKSPACE"), listOf("اب/ABC", "SPACE", "ENTER"))
+        "balorabi" -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("ے/ݔ", "ڈ", "ٹ", "ۏ", "ء", "ھ", "ج", "چ", "ءِ"), listOf("ش", "س", "ی", "ب", "ل", "ا", "ت", "ن", "م", "پ"), listOf("⚙️", "ژ", "ز", "ر", "د", "و", "ک", "گ", "⌫"), listOf("؟۱۲۳", "GLOBE", "◀▶", "SPACE", "۔", "⏎"))
+        "balotin" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("À", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ť"), listOf("A", "Š", "S", "D", "Ď", "G", "H", "J", "K", "L", "Ò"), listOf("SHIFT", "Z", "Ž", "C", "È", "B", "N", "M", "⌫"), listOf("?123", "GLOBE", "SPACE", ".", "⏎"))
+        "symbols1" -> listOf(listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"), listOf("+", "×", "÷", "=", "٪", "^", "!", "@", "#", "$"), listOf("/", "\\", "~", "*", "(", ")", "-", "_", "|", "&"), listOf("2/2 →", "[", "]", "{", "}", "<", ">", "❂", "⌫"), listOf("اب/ABC", "SPACE", "⏎"))
+        else -> listOf(listOf("۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۰"), listOf("،", "؟", "?", ".", ",", ":", ";", "\"", "'", "|"), listOf("❂", "Ꝃ", "★", "☆", "✦", "❖", "◈", "✿", "✛", "✜"), listOf("← 1/2", "⚔", "🌴", "🐫", "🏔", "☪", "✵", "✹", "⌫"), listOf("اب/ABC", "SPACE", "⏎"))
     }
 
     private fun showLongPressPopup(anchorView: View, originalKey: String) {
